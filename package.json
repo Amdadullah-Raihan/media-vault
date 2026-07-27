@@ -1,0 +1,30 @@
+{
+  "name": "media-vault",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A production-ready, open-source, self-hosted media management server",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace=@media-vault/server",
+    "build": "npm run build --workspaces",
+    "lint": "eslint packages/*/src --ext .ts",
+    "typecheck": "tsc --build",
+    "clean": "rimraf packages/*/dist packages/*/node_modules node_modules",
+    "format": "prettier --write \"packages/**/src/**/*.ts\"",
+    "test": "jest"
+  },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^7.0.0",
+    "@typescript-eslint/parser": "^7.0.0",
+    "eslint": "^8.57.0",
+    "eslint-config-prettier": "^9.1.0",
+    "prettier": "^3.2.0",
+    "rimraf": "^5.0.0",
+    "typescript": "^5.4.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

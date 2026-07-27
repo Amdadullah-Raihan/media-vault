@@ -1,0 +1,101 @@
+// ---------------------------------------------------------------------------
+// MediaVault – Prisma Schema
+//
+// SQLite is the default database. The schema is designed to be portable
+// to PostgreSQL with minimal changes.
+// ---------------------------------------------------------------------------
+
+generator client {
+    provider = "prisma-client-js"
+}
+
+datasource db {
+    provider = "sqlite"
+}
+
+// ---------------------------------------------------------------------------
+// Project – top-level isolation boundary
+// ---------------------------------------------------------------------------
+
+model Project {
+    id          String   @id @default(uuid())
+    name        String   @unique
+    description String?
+    createdAt   DateTime @default(now())
+    updatedAt   DateTime @updatedAt
+
+    apiKeys ApiKey[]
+    files   FileMetadata[]
+    folders Folder[]
+
+    @@index([name])
+}
+
+// ---------------------------------------------------------------------------
+// API Key – per-project authentication
+// ---------------------------------------------------------------------------
+
+model ApiKey {
+    id         String    @id @default(uuid())
+    projectId  String
+    key        String    @unique
+    label      String    @default("default")
+    createdAt  DateTime  @default(now())
+    lastUsedAt DateTime?
+
+    project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+    @@index([projectId])
+    @@index([key])
+}
+
+// ---------------------------------------------------------------------------
+// Folder – hierarchical organisation
+// ---------------------------------------------------------------------------
+
+model Folder {
+    id        String   @id @default(uuid())
+    projectId String
+    parentId  String?
+    name      String
+    path      String
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    project  Project        @relation(fields: [projectId], references: [id], onDelete: Cascade)
+    parent   Folder?        @relation("FolderTree", fields: [parentId], references: [id], onDelete: SetNull)
+    children Folder[]       @relation("FolderTree")
+    files    FileMetadata[]
+
+    @@unique([projectId, path])
+    @@index([projectId])
+    @@index([parentId])
+}
+
+// ---------------------------------------------------------------------------
+// FileMetadata – everything we know about a stored file
+// ---------------------------------------------------------------------------
+
+model FileMetadata {
+    id               String   @id @default(uuid())
+    projectId        String
+    folderId         String?
+    filename         String
+    originalFilename String
+    extension        String
+    mimeType         String
+    size             Int
+    hash             String
+    visibility       String   @default("private")
+    createdAt        DateTime @default(now())
+    updatedAt        DateTime @updatedAt
+
+    project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+    folder  Folder? @relation(fields: [folderId], references: [id], onDelete: SetNull)
+
+    @@unique([projectId, filename])
+    @@index([projectId])
+    @@index([folderId])
+    @@index([visibility])
+    @@index([hash])
+}
