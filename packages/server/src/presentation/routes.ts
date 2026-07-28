@@ -5,12 +5,16 @@
 import { Router } from 'express';
 import multer from 'multer';
 import { getConfig } from '../config';
+import { getPrisma } from '../utils/prisma';
 import {
   ProjectController,
   ApiKeyController,
   FolderController,
   FileController,
+  AuthController,
 } from '../controllers';
+import { SettingsRepository, SessionRepository } from '../repositories';
+import { AuthService } from '../services';
 import { authenticate, requireProject } from '../auth';
 import { validate } from '../validation';
 import {
@@ -24,10 +28,17 @@ import {
 
 const router = Router();
 
+const prisma = getPrisma();
 const projectController = new ProjectController();
 const apiKeyController = new ApiKeyController();
 const folderController = new FolderController();
 const fileController = new FileController();
+
+// Auth setup
+const settingsRepo = new SettingsRepository(prisma);
+const sessionRepo = new SessionRepository(prisma);
+const authService = new AuthService(settingsRepo, sessionRepo);
+const authController = new AuthController(authService);
 
 // Multer: in-memory storage (streamed to the storage driver)
 const config = getConfig();
@@ -35,6 +46,15 @@ const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: config.storage.maxFileSizeBytes },
 });
+
+// =========================================================================
+// Auth (dashboard login — no API key required)
+// =========================================================================
+
+router.post('/auth/login', authController.login);
+router.post('/auth/logout', authController.logout);
+router.get('/auth/session', authController.session);
+router.post('/auth/change-password', authController.changePassword);
 
 // =========================================================================
 // Projects

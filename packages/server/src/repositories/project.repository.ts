@@ -2,7 +2,7 @@
 // MediaVault – Project Repository
 // ---------------------------------------------------------------------------
 
-import { PrismaClient, Prisma } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
 import { getPrisma } from '../utils/prisma';
 import { CreateProjectInput, PaginatedResult, PaginationParams } from '../core/types';
 

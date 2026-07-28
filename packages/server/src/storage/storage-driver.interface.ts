@@ -5,7 +5,7 @@
 // must never couple to a specific driver.
 // ---------------------------------------------------------------------------
 
-import { StorableFile, StorageResult } from './types';
+import { StorableFile, StorageResult } from '../core/types';
 
 export interface StorageDriver {
   /** A unique identifier for this driver (e.g. "local", "s3"). */

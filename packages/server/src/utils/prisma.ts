@@ -22,8 +22,10 @@ export function getPrisma(): PrismaClient {
     });
 
     const childLogger = logger.child({ component: 'prisma' });
-    _prisma.$on('warn', (e) => childLogger.warn(e));
-    _prisma.$on('error', (e) => childLogger.error(e));
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (_prisma as any).$on('warn', (e: unknown) => childLogger.warn(e));
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (_prisma as any).$on('error', (e: unknown) => childLogger.error(e));
   }
   return _prisma;
 }

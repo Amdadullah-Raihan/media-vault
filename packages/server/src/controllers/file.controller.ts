@@ -6,7 +6,6 @@ import { Request, Response, NextFunction } from 'express';
 import { FileService } from '../services';
 import { PaginationParams, FileVisibility } from '../core/types';
 import { ok, created, noContent } from '../utils/responses';
-import path from 'node:path';
 
 export class FileController {
   private readonly service = new FileService();

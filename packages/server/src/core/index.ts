@@ -16,7 +16,7 @@ export type {
   StorageResult,
 } from './types';
 
-export { StorageDriver } from '../storage/storage-driver.interface';
+export type { StorageDriver } from '../storage/storage-driver.interface';
 
 export {
   AppError,
