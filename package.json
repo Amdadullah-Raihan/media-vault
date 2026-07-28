@@ -8,8 +8,7 @@
   ],
   "scripts": {
     "dev": "npm run dev --workspace=@media-vault/server",
-    "dev:dashboard": "npm run dev --workspace=@media-vault/dashboard",
-    "build": "npm run build --workspaces",
+    "build": "npm run build --workspace=@media-vault/dashboard && npm run build --workspace=@media-vault/server",
     "lint": "eslint packages/*/src --ext .ts",
     "typecheck": "tsc --build",
     "clean": "rimraf packages/*/dist packages/*/node_modules node_modules",

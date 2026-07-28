@@ -11,14 +11,16 @@ async function main(): Promise<void> {
   const config = getConfig();
   const logger = getLogger();
 
-  const app = createApp();
+  const app = await createApp();
 
   const server = app.listen(config.server.port, config.server.host, () => {
+    const baseUrl = `http://${config.server.host === '0.0.0.0' ? 'localhost' : config.server.host}:${config.server.port}`;
     logger.info(
       { host: config.server.host, port: config.server.port },
       'MediaVault server started',
     );
-    logger.info({ url: 'http://localhost:5173' }, 'MediaVault Dashboard');
+    logger.info({ url: baseUrl }, 'Dashboard');
+    logger.info({ url: `${baseUrl}/api/v1` }, 'API');
   });
 
   // Graceful shutdown
