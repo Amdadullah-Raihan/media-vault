@@ -18,6 +18,7 @@ async function main(): Promise<void> {
       { host: config.server.host, port: config.server.port },
       'MediaVault server started',
     );
+    logger.info({ url: 'http://localhost:5173' }, 'MediaVault Dashboard');
   });
 
   // Graceful shutdown

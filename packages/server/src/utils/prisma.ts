@@ -1,29 +1,20 @@
 // ---------------------------------------------------------------------------
 // MediaVault – Prisma Client Singleton
 //
-// Prisma 7+ uses the adapter pattern: the connection URL is passed via an
-// adapter rather than the datasource block in the schema.
+// Prisma 6 uses the datasource URL from schema.prisma.
+// The client is a singleton to avoid connection exhaustion during development.
 // ---------------------------------------------------------------------------
 
 import { PrismaClient } from '@prisma/client';
-import { PrismaSqlite } from '@prisma/adapter-sqlite';
-import { getConfig } from '../config';
 import { getLogger } from './logger';
 
 let _prisma: PrismaClient | undefined;
 
 export function getPrisma(): PrismaClient {
   if (!_prisma) {
-    const config = getConfig();
     const logger = getLogger();
 
-    // Prisma 7+ adapter: direct database connection via the SQLite adapter
-    const adapter = new PrismaSqlite({
-      url: config.database.url,
-    });
-
     _prisma = new PrismaClient({
-      adapter,
       log: [
         { level: 'warn', emit: 'event' },
         { level: 'error', emit: 'event' },
