@@ -30,7 +30,7 @@ export function DropdownMenu({ trigger, children, align = 'start', className }: 
       {open && (
         <div
           className={cn(
-            'absolute z-50 mt-1 min-w-[8rem] rounded-md border bg-popover p-1 text-popover-foreground shadow-md animate-slide-up',
+            'absolute z-50 mt-1 min-w-[8rem] rounded-md border bg-popover p-1 text-popover-foreground shadow-md animate-slide-up dark:bg-gray-900 dark:text-gray-100',
             align === 'end' ? 'right-0' : 'left-0',
             className,
           )}
@@ -60,7 +60,7 @@ export function DropdownItem({
   return (
     <button
       className={cn(
-        'relative flex w-full cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors',
+        'relative flex w-full cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors text-popover-foreground',
         'hover:bg-accent hover:text-accent-foreground',
         'data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
         destructive && 'text-destructive hover:bg-destructive/10 hover:text-destructive',
