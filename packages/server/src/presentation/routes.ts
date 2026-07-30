@@ -14,7 +14,7 @@ import {
   AuthController,
   SettingsController,
 } from '../controllers';
-import { SessionRepository } from '../repositories';
+import { SettingsRepository, SessionRepository } from '../repositories';
 import { AuthService } from '../services';
 import { authenticate, requireProject } from '../auth';
 import { validate } from '../validation';
@@ -39,8 +39,10 @@ const settingsController = new SettingsController();
 const config = getConfig();
 
 // Auth setup
+const settingsRepo = new SettingsRepository(prisma);
 const sessionRepo = new SessionRepository(prisma);
 const authService = new AuthService(
+  settingsRepo,
   sessionRepo,
   config.auth.adminUsername,
   config.auth.adminPassword,
@@ -60,9 +62,16 @@ const upload = multer({
 router.post('/auth/login', authController.login);
 router.post('/auth/logout', authController.logout);
 router.get('/auth/session', authController.session);
+router.post('/auth/change-password', authController.changePassword);
 
 // Settings (dashboard configuration)
-router.get('/settings', settingsController.get);
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+router.get('/settings', (req, res, next) => {
+  settingsController.get(req, res).catch((err: unknown) => {
+    next(err);
+  });
+});
+/* eslint-enable @typescript-eslint/no-unsafe-argument */
 
 // =========================================================================
 // Projects

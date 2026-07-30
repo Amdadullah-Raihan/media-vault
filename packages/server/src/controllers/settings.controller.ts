@@ -6,18 +6,24 @@
 
 import { Request, Response } from 'express';
 import { getConfig } from '../config';
+import { getPrisma } from '../utils/prisma';
+import { SettingsRepository } from '../repositories/settings.repository';
 import { ok } from '../utils/responses';
+
+const DB_USERNAME = 'admin_username';
 
 export class SettingsController {
   // ---------------------------------------------------------------------------
   // GET /settings
   // ---------------------------------------------------------------------------
 
-  get = (_req: Request, res: Response): void => {
+  get = async (_req: Request, res: Response): Promise<void> => {
     const config = getConfig();
+    const settings = new SettingsRepository(getPrisma());
+    const dbUsername = await settings.get(DB_USERNAME);
 
     ok(res, {
-      adminUsername: config.auth.adminUsername,
+      adminUsername: dbUsername ?? config.auth.adminUsername,
       storage: {
         maxFileSizeBytes: config.storage.maxFileSizeBytes,
         allowedMimeTypes: config.storage.allowedMimeTypes,

@@ -29,7 +29,22 @@ export const authApi = createApi({
       query: () => '/auth/session',
       providesTags: ['Auth'],
     }),
+    changePassword: builder.mutation<
+      ApiResponse<null>,
+      { currentPassword: string; newPassword: string }
+    >({
+      query: (body) => ({
+        url: '/auth/change-password',
+        method: 'POST',
+        body,
+      }),
+    }),
   }),
 });
 
-export const { useLoginMutation, useLogoutMutation, useGetSessionQuery } = authApi;
+export const {
+  useLoginMutation,
+  useLogoutMutation,
+  useGetSessionQuery,
+  useChangePasswordMutation,
+} = authApi;

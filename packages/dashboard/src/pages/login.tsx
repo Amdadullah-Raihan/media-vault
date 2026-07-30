@@ -35,7 +35,7 @@ export default function LoginPage() {
       navigate('/');
     } catch (err: unknown) {
       const apiErr = err as { data?: ApiError };
-      toast.error(apiErr?.data?.message ?? 'Invalid credentials');
+      toast.error(apiErr.data?.message ?? 'Invalid credentials');
     }
   };
 

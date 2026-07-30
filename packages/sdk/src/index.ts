@@ -4,7 +4,7 @@
 // Wraps every API endpoint. Developers should never build HTTP requests manually.
 // ---------------------------------------------------------------------------
 
-import axios, { AxiosInstance, AxiosRequestConfig } from 'axios';
+import axios, { AxiosInstance } from 'axios';
 
 // ---------------------------------------------------------------------------
 // Types (mirrors server core types)

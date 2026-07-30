@@ -1,16 +1,59 @@
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { useChangePasswordMutation } from '@/services/auth.service';
 import { useGetSettingsQuery } from '@/services/settings.service';
 import { PageHeader } from '@/components/shared';
-import { PageSkeleton, ErrorState } from '@/components/ui';
+import { Button, Input, PageSkeleton, ErrorState } from '@/components/ui';
 import { useAppSelector, useAppDispatch } from '@/redux/store';
 import { setTheme } from '@/redux/slices/ui.slice';
 import { Select } from '@/components/ui';
+import toast from 'react-hot-toast';
 import { Settings, Lock, Palette } from 'lucide-react';
+import type { ApiError } from '@/types';
+
+const passwordSchema = z
+  .object({
+    currentPassword: z.string().min(1, 'Current password is required'),
+    newPassword: z.string().min(8, 'Password must be at least 8 characters'),
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.newPassword === data.confirmPassword, {
+    message: 'Passwords do not match',
+    path: ['confirmPassword'],
+  });
+
+type PasswordFormData = z.infer<typeof passwordSchema>;
 
 export default function SettingsPage() {
   const theme = useAppSelector((s) => s.ui.theme);
   const dispatch = useAppDispatch();
 
   const { data: settingsData, isLoading, isError, refetch } = useGetSettingsQuery();
+  const [changePassword, { isLoading: changing }] = useChangePasswordMutation();
+
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<PasswordFormData>({
+    resolver: zodResolver(passwordSchema),
+  });
+
+  const onPasswordSubmit = async (data: PasswordFormData) => {
+    try {
+      await changePassword({
+        currentPassword: data.currentPassword,
+        newPassword: data.newPassword,
+      }).unwrap();
+      toast.success('Password changed successfully');
+      reset();
+    } catch (err: unknown) {
+      const apiErr = err as { data?: ApiError };
+      toast.error(apiErr.data?.message ?? 'Failed to change password');
+    }
+  };
 
   if (isLoading) return <PageSkeleton />;
   if (isError) return <ErrorState onRetry={refetch} />;
@@ -69,17 +112,44 @@ export default function SettingsPage() {
         <div className="border-b px-6 py-4">
           <div className="flex items-center gap-2">
             <Lock className="h-5 w-5 text-muted-foreground" />
-            <h3 className="font-semibold">Admin Credentials</h3>
+            <h3 className="font-semibold">Change Password</h3>
           </div>
         </div>
         <div className="p-6">
-          <p className="text-sm text-muted-foreground">
-            Admin credentials are managed via the{' '}
-            <code className="rounded bg-muted px-1 py-0.5 text-xs">ADMIN_USERNAME</code> and{' '}
-            <code className="rounded bg-muted px-1 py-0.5 text-xs">ADMIN_PASSWORD</code> environment
-            variables in your <code className="rounded bg-muted px-1 py-0.5 text-xs">.env</code>{' '}
-            file. Change them there and restart the server.
+          <p className="mb-4 text-sm text-muted-foreground">
+            Initial credentials come from{' '}
+            <code className="rounded bg-muted px-1 py-0.5 text-xs">.env</code>. Changes made here
+            persist in the database and survive restarts.
           </p>
+          <form onSubmit={handleSubmit(onPasswordSubmit)} className="space-y-4">
+            <Input
+              id="currentPassword"
+              label="Current Password"
+              type="password"
+              placeholder="Enter current password"
+              error={errors.currentPassword?.message}
+              {...register('currentPassword')}
+            />
+            <Input
+              id="newPassword"
+              label="New Password"
+              type="password"
+              placeholder="Enter new password"
+              error={errors.newPassword?.message}
+              {...register('newPassword')}
+            />
+            <Input
+              id="confirmPassword"
+              label="Confirm New Password"
+              type="password"
+              placeholder="Confirm new password"
+              error={errors.confirmPassword?.message}
+              {...register('confirmPassword')}
+            />
+            <Button type="submit" loading={changing}>
+              Update Password
+            </Button>
+          </form>
         </div>
       </div>
     </div>
