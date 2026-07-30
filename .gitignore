@@ -3,7 +3,10 @@ node_modules/
 
 # Build outputs
 dist/
-*.tsbuildinfo
+packages/cli/dist/
+packages/dashboard/dist/
+packages/server/dist/
+packages/sdk/dist/
 
 # Environment files
 .env
