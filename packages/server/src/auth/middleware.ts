@@ -72,12 +72,13 @@ export async function authenticate(req: Request, res: Response, next: NextFuncti
       return;
     }
 
-    // Expired or invalid — clear cookie
+    // Expired or not found — clear cookie
     if (session) {
       await prisma.session.delete({ where: { id: sessionId } }).catch(() => {
         /* best-effort */
       });
     }
+    res.clearCookie(SESSION_COOKIE, { path: '/' });
   }
 
   // -----------------------------------------------------------------------

@@ -157,6 +157,7 @@ export default function SettingsPage() {
               id="currentPassword"
               label="Current Password"
               type="password"
+              autoComplete="current-password"
               placeholder="Enter current password"
               error={errors.currentPassword?.message}
               {...register('currentPassword')}
@@ -165,6 +166,7 @@ export default function SettingsPage() {
               id="newPassword"
               label="New Password"
               type="password"
+              autoComplete="new-password"
               placeholder="Enter new password"
               error={errors.newPassword?.message}
               {...register('newPassword')}
@@ -173,6 +175,7 @@ export default function SettingsPage() {
               id="confirmPassword"
               label="Confirm New Password"
               type="password"
+              autoComplete="new-password"
               placeholder="Confirm new password"
               error={errors.confirmPassword?.message}
               {...register('confirmPassword')}
