@@ -269,3 +269,12 @@ Continue fixing errors until the project is clean.
 Quality is more important than speed.
 
 A smaller, correct implementation is always preferred over a larger implementation that leaves compilation or linting errors.
+
+## Output Format
+
+After completing work, respond with exactly in a separating format:
+
+```
+I've followed the instructions file
+
+```
