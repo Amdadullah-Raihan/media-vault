@@ -272,7 +272,7 @@ A smaller, correct implementation is always preferred over a larger implementati
 
 ## Output Format
 
-After completing work, respond with exactly in a separating format:
+After completing work, respond with exactly in bold and italic with background highlight:
 
 ```
 I've followed the instructions file

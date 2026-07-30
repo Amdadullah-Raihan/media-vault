@@ -82,40 +82,4 @@ export class AuthController {
 
     ok(res, { id: sessionId, username: session.username, createdAt: new Date().toISOString() });
   };
-
-  // -----------------------------------------------------------------------
-  // POST /auth/change-password
-  // -----------------------------------------------------------------------
-
-  changePassword = async (req: Request, res: Response, _next: NextFunction): Promise<void> => {
-    const sessionId = req.cookies?.[SESSION_COOKIE] as string | undefined;
-    if (!sessionId) {
-      error(res, 401, 'UNAUTHORIZED', 'No active session.');
-      return;
-    }
-
-    const { currentPassword, newPassword } = req.body as {
-      currentPassword?: string;
-      newPassword?: string;
-    };
-
-    if (!currentPassword || !newPassword) {
-      error(res, 400, 'BAD_REQUEST', 'Current and new password are required.');
-      return;
-    }
-
-    if (newPassword.length < 8) {
-      error(res, 400, 'BAD_REQUEST', 'New password must be at least 8 characters.');
-      return;
-    }
-
-    const changed = await this.authService.changePassword(currentPassword, newPassword);
-
-    if (!changed) {
-      error(res, 400, 'BAD_REQUEST', 'Current password is incorrect.');
-      return;
-    }
-
-    ok(res, null);
-  };
 }

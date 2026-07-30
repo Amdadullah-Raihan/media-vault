@@ -154,6 +154,18 @@ export class FileService {
     return this.repo.findByFolderId(folderId, params) as Promise<PaginatedResult<FileMetadata>>;
   }
 
+  public async list(filters: {
+    projectId?: string;
+    folderId?: string;
+    search?: string;
+    page: number;
+    limit: number;
+    sortBy?: string;
+    sortOrder?: 'asc' | 'desc';
+  }): Promise<PaginatedResult<FileMetadata>> {
+    return this.repo.findAll(filters) as Promise<PaginatedResult<FileMetadata>>;
+  }
+
   public async update(id: string, data: { folderId?: string | null; visibility?: FileVisibility }) {
     const metadata = await this.repo.findById(id);
     if (!metadata) {

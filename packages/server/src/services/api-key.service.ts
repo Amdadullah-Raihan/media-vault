@@ -42,6 +42,10 @@ export class ApiKeyService {
     return this.repo.findByProjectId(projectId);
   }
 
+  public async listAll() {
+    return this.repo.findAll();
+  }
+
   public async delete(id: string, projectId: string) {
     const key = await this.repo.findById(id);
     if (!key) {

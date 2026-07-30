@@ -4,7 +4,7 @@
 
 import { Request, Response, NextFunction } from 'express';
 import { FileService } from '../services';
-import { PaginationParams, FileVisibility } from '../core/types';
+import { FileVisibility } from '../core/types';
 import { ok, created, noContent } from '../utils/responses';
 
 export class FileController {
@@ -112,31 +112,25 @@ export class FileController {
 
   public list = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const params: PaginationParams = {
-        page: Number(req.query.page) || 1,
-        limit: Number(req.query.limit) || 20,
-        sortBy: req.query.sortBy as string | undefined,
-        sortOrder: req.query.sortOrder as 'asc' | 'desc' | undefined,
-      };
+      const page = Number(req.query.page) || 1;
+      const limit = Number(req.query.limit) || 20;
 
-      const projectId = req.query.projectId as string;
-      const folderId = req.query.folderId as string;
+      const projectId = req.query.projectId as string | undefined;
+      const folderId = req.query.folderId as string | undefined;
+      const search = req.query.search as string | undefined;
+      const sortBy = req.query.sortBy as string | undefined;
+      const sortOrder = req.query.sortOrder as 'asc' | 'desc' | undefined;
 
-      if (folderId) {
-        const result = await this.service.listByFolderId(folderId, params);
-        ok(res, result);
-      } else if (projectId) {
-        const result = await this.service.listByProjectId(projectId, params);
-        ok(res, result);
-      } else {
-        res.status(400).json({
-          success: false,
-          error: {
-            code: 'VALIDATION_ERROR',
-            message: 'projectId or folderId query parameter is required',
-          },
-        });
-      }
+      const result = await this.service.list({
+        projectId,
+        folderId,
+        search,
+        page,
+        limit,
+        sortBy,
+        sortOrder,
+      });
+      ok(res, result);
     } catch (err) {
       next(err);
     }

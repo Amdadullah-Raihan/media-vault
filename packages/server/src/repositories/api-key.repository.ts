@@ -32,6 +32,12 @@ export class ApiKeyRepository {
     });
   }
 
+  public async findAll() {
+    return this.prisma.apiKey.findMany({
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
   public async delete(id: string) {
     return this.prisma.apiKey.delete({ where: { id } });
   }

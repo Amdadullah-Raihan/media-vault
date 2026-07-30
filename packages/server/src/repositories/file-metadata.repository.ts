@@ -81,6 +81,47 @@ export class FileMetadataRepository {
     };
   }
 
+  public async findAll(filters: {
+    projectId?: string;
+    folderId?: string;
+    search?: string;
+    page: number;
+    limit: number;
+    sortBy?: string;
+    sortOrder?: 'asc' | 'desc';
+  }): Promise<PaginatedResult<unknown>> {
+    const { projectId, folderId, search, page, limit, sortBy, sortOrder } = filters;
+    const skip = (page - 1) * limit;
+
+    const where: Record<string, unknown> = {};
+    if (projectId) where['projectId'] = projectId;
+    if (folderId) where['folderId'] = folderId;
+    if (search) {
+      where['OR'] = [
+        { originalFilename: { contains: search } },
+        { filename: { contains: search } },
+      ];
+    }
+
+    const [data, total] = await Promise.all([
+      this.prisma.fileMetadata.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: { [sortBy ?? 'createdAt']: sortOrder ?? 'desc' },
+      }),
+      this.prisma.fileMetadata.count({ where }),
+    ]);
+
+    return {
+      data,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    };
+  }
+
   public async update(
     id: string,
     data: Partial<Pick<CreateFileMetadataInput, 'folderId' | 'visibility'>>,

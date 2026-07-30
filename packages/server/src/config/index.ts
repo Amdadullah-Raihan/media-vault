@@ -55,6 +55,8 @@ export interface AppConfig {
     enabled: boolean;
     apiKeyHeader: string;
     signedUrlSecret: string;
+    adminUsername: string;
+    adminPassword: string;
   };
   logging: {
     level: string;
@@ -107,6 +109,8 @@ export function loadConfig(): AppConfig {
       enabled: envBool('MEDIAVAULT_AUTH_ENABLED', true),
       apiKeyHeader: envString('MEDIAVAULT_API_KEY_HEADER', 'x-api-key'),
       signedUrlSecret: envString('MEDIAVAULT_SIGNED_URL_SECRET', 'change-me-in-production'),
+      adminUsername: envString('ADMIN_USERNAME', 'admin'),
+      adminPassword: envString('ADMIN_PASSWORD', 'admin'),
     },
     logging: {
       level: envString('MEDIAVAULT_LOG_LEVEL', 'info'),

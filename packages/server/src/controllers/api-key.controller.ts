@@ -25,15 +25,10 @@ export class ApiKeyController {
 
   public list = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const projectId = req.query.projectId as string;
-      if (!projectId) {
-        res.status(400).json({
-          success: false,
-          error: { code: 'VALIDATION_ERROR', message: 'projectId query parameter is required' },
-        });
-        return;
-      }
-      const keys = await this.service.listByProjectId(projectId);
+      const projectId = req.query.projectId as string | undefined;
+      const keys = projectId
+        ? await this.service.listByProjectId(projectId)
+        : await this.service.listAll();
       ok(res, keys);
     } catch (err) {
       next(err);

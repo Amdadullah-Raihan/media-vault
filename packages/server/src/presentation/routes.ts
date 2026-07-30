@@ -12,8 +12,9 @@ import {
   FolderController,
   FileController,
   AuthController,
+  SettingsController,
 } from '../controllers';
-import { SettingsRepository, SessionRepository } from '../repositories';
+import { SessionRepository } from '../repositories';
 import { AuthService } from '../services';
 import { authenticate, requireProject } from '../auth';
 import { validate } from '../validation';
@@ -33,15 +34,20 @@ const projectController = new ProjectController();
 const apiKeyController = new ApiKeyController();
 const folderController = new FolderController();
 const fileController = new FileController();
+const settingsController = new SettingsController();
+
+const config = getConfig();
 
 // Auth setup
-const settingsRepo = new SettingsRepository(prisma);
 const sessionRepo = new SessionRepository(prisma);
-const authService = new AuthService(settingsRepo, sessionRepo);
+const authService = new AuthService(
+  sessionRepo,
+  config.auth.adminUsername,
+  config.auth.adminPassword,
+);
 const authController = new AuthController(authService);
 
 // Multer: in-memory storage (streamed to the storage driver)
-const config = getConfig();
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: config.storage.maxFileSizeBytes },
@@ -54,7 +60,9 @@ const upload = multer({
 router.post('/auth/login', authController.login);
 router.post('/auth/logout', authController.logout);
 router.get('/auth/session', authController.session);
-router.post('/auth/change-password', authController.changePassword);
+
+// Settings (dashboard configuration)
+router.get('/settings', settingsController.get);
 
 // =========================================================================
 // Projects
