@@ -82,7 +82,7 @@ Never claim "feature implemented" until all DoD checks pass.
 If TS/ESLint errors remain → task incomplete → keep fixing.
 Quality > speed. Smaller correct > larger broken.
 
-After completing work, respond with exactly:
+After completing work, respond with exactly in highlight italic code block:
 
 ```
 I've followed the instructions file
