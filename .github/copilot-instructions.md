@@ -1,280 +1,89 @@
-# Code Quality & Completion Rules (Mandatory)
+# Copilot Instructions
 
-These rules are mandatory for every task. A task is **NOT complete** until all of the following conditions are satisfied.
+## Definition of Done
 
----
+Task incomplete until ALL pass:
 
-# Definition of Done
+- Build succeeds
+- TypeScript: zero errors
+- ESLint: zero errors
+- No unused imports, variables, or dead code
+- No duplicate implementations
+- Existing functionality preserved
+- Feature fully integrated
+- Docs updated if needed
 
-A task is only considered complete when:
+## Before Creating
 
-- The project builds successfully.
-- TypeScript has **zero errors**.
-- ESLint has **zero errors**.
-- There are no unused imports.
-- There are no unused variables.
-- There are no duplicate implementations.
-- The new feature is fully integrated.
-- Existing functionality is not broken.
-- Documentation is updated when required.
+- Search for existing components, hooks, services, utils, types first
+- Reuse; never duplicate
 
-Never stop after implementing only the requested feature.
+## Code Quality
 
----
+- `any`, `@ts-ignore`, `@ts-nocheck` — forbidden
+- Avoid `!` (non-null assertion) and bare `unknown`
+- Remove unused/duplicate imports; organize consistently
+- Components: single responsibility, small, no duplicated JSX
+- Extract duplicated logic (>1 occurrence) into hook/util/component/service
 
-# Before Finishing Any Task
+## Error Handling
 
-Always complete this checklist.
+- Never ignore errors
+- Every async op must handle failures; no silent failures
 
-## 1. Search For Existing Code
+## API Changes
 
-Before creating:
+If API changes, update: types, SDK, RTK Query, docs, all consuming components.
+No broken references.
 
-- Components
-- Hooks
-- Services
-- Utilities
-- Types
-- Interfaces
+## Large Tasks
 
-Search the project first.
+- One module at a time → verify TS + ESLint → refactor → continue
+- Never leave accumulated errors across files
 
-If a reusable implementation already exists, reuse it.
+## Existing Errors
 
-Never duplicate functionality.
+- Fix if related to task; report if unrelated
+- Never introduce new errors
 
----
+## Self Review (before completion)
 
-## 2. TypeScript Validation
+Verify: no broken imports, missing exports, TS errors, ESLint errors, duplicated code, dead code, unused imports/vars, broken routes, broken API refs, invalid types, inconsistent architecture.
 
-After every file modification:
+## Responsiveness
 
-Check for:
+Every file edit must produce responsive output. All UI changes must work at: mobile, tablet, laptop, desktop, ultra-wide.
 
-- Type errors
-- Missing imports
-- Incorrect imports
-- Missing exports
-- Invalid generic types
-- Invalid interfaces
-- Invalid return types
-- Incorrect async handling
+- Prefer Flexbox, CSS Grid, responsive Tailwind utils, relative sizing, mobile-first
+- Never hardcode dimensions that break layouts
+- Verify at common breakpoints before marking task complete
+- Try to use container queries for components that need to adapt to parent size
 
-Never leave TypeScript errors unresolved.
+## Design System
 
-Never assume they will be fixed later.
+Reuse existing components, hooks, utils, layouts, form controls, tables, modals, buttons, inputs.
+Search before creating. Never introduce new patterns when reusable ones exist.
 
----
+## Performance
 
-## 3. ESLint
+- Lazy loading, tree-shakable imports
+- Memoize only when beneficial
+- Minimal re-renders
+- Avoid unnecessary abstractions
 
-After every modification:
+## Task Size
 
-Resolve all lint errors.
+- One logical feature per task
+- Leave project buildable after every task
 
-Examples:
+## Completion
 
-- no-unused-vars
-- no-explicit-any
-- no-shadow
-- no-console (unless intentional)
-- react-hooks rules
-- import ordering
-- formatting issues
+Never claim "feature implemented" until all DoD checks pass.
+If TS/ESLint errors remain → task incomplete → keep fixing.
+Quality > speed. Smaller correct > larger broken.
 
-Never ignore lint errors.
-
-Never disable ESLint rules without justification.
-
----
-
-## 4. Strict TypeScript
-
-Never use:
-
-- any
-- @ts-ignore
-- @ts-nocheck
-
-Avoid:
-
-- unknown without narrowing
-- non-null assertions (!) unless absolutely necessary
-
-Always prefer proper typing.
-
----
-
-## 5. Imports
-
-Remove:
-
-- unused imports
-- duplicate imports
-
-Organize imports consistently.
-
----
-
-## 6. Component Quality
-
-Components should:
-
-- Have one responsibility.
-- Remain reasonably small.
-- Avoid duplicated JSX.
-- Reuse shared UI components.
-
----
-
-## 7. Reusability
-
-If code is duplicated more than once:
-
-Extract:
-
-- Hook
-- Utility
-- Component
-- Service
-
-Never copy-paste logic.
-
----
-
-## 8. Error Handling
-
-Never ignore errors.
-
-Every async operation must:
-
-- handle failures
-- return consistent errors
-- avoid silent failures
-
----
-
-## 9. API Changes
-
-If an API changes:
-
-Update:
-
-- Types
-- SDK
-- RTK Query
-- Documentation
-- Components using that API
-
-Never leave broken references.
-
----
-
-## 10. Project Consistency
-
-After implementing a feature:
-
-Search the project for:
-
-- broken imports
-- outdated types
-- duplicated constants
-- dead code
-- unreachable code
-
-Fix them before finishing.
-
----
-
-# Large Tasks
-
-Never modify dozens of files blindly.
-
-Instead:
-
-1. Complete one module.
-2. Verify TypeScript.
-3. Verify ESLint.
-4. Refactor.
-5. Continue.
-
-Do not accumulate errors across multiple files.
-
----
-
-# Existing Errors
-
-If existing TypeScript or ESLint errors are discovered:
-
-Do not ignore them.
-
-Determine whether they are related to the current task.
-
-If they are:
-
-Fix them.
-
-If they are unrelated:
-
-Report them before continuing.
-
-Never introduce additional errors.
-
----
-
-# Self Review
-
-Before marking a task complete, review the changes and verify:
-
-✓ No broken imports
-
-✓ No missing exports
-
-✓ No TypeScript errors
-
-✓ No ESLint errors
-
-✓ No duplicated code
-
-✓ No dead code
-
-✓ No unused imports
-
-✓ No unused variables
-
-✓ No broken routes
-
-✓ No broken API references
-
-✓ No invalid types
-
-✓ Consistent architecture
-
----
-
-# Completion Policy
-
-Never respond with:
-
-"The feature has been implemented."
-
-Until all quality checks above have been completed.
-
-If any TypeScript or ESLint error remains:
-
-The task is considered incomplete.
-
-Continue fixing errors until the project is clean.
-
-Quality is more important than speed.
-
-A smaller, correct implementation is always preferred over a larger implementation that leaves compilation or linting errors.
-
-## Output Format
-
-After completing work, respond with exactly in bold and italic with background highlight:
+After completing work, respond with exactly:
 
 ```
 I've followed the instructions file
-
 ```
