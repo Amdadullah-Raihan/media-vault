@@ -126,6 +126,14 @@ To disable authentication, set `MEDIAVAULT_AUTH_ENABLED=false` in your `.env`.
 
 ## SDK Usage
 
+### Installation
+
+```bash
+npm install @media-vault/sdk
+```
+
+### Quick Start
+
 ```typescript
 import { MediaVaultClient } from '@media-vault/sdk';
 
@@ -133,16 +141,115 @@ const client = new MediaVaultClient({
   baseUrl: 'http://localhost:3000',
   apiKey: 'mv_your_key_here',
 });
-
-// Create a project
-const project = await client.createProject({ name: 'my-app' });
-
-// Upload a file
-const file = await client.uploadFile(project.id, buffer, 'photo.jpg');
-
-// Stream URL (for <video> / <audio> tags)
-const streamUrl = client.getStreamUrl(file.id);
 ```
+
+### Projects
+
+```typescript
+// Create
+const project = await client.createProject({ name: 'my-app', description: 'Optional' });
+
+// List (paginated)
+const { data, total, page, totalPages } = await client.listProjects({ page: 1, limit: 10 });
+
+// Get by ID
+const p = await client.getProject(project.id);
+
+// Delete
+await client.deleteProject(project.id);
+```
+
+### API Keys
+
+```typescript
+// Create (returns rawKey — save it, won't be shown again)
+const key = await client.createApiKey({ projectId: project.id, label: 'production' });
+console.log(key.rawKey); // mv_abc123...
+
+// List
+const keys = await client.listApiKeys(project.id);
+
+// Revoke
+await client.deleteApiKey(key.id, project.id);
+```
+
+### Folders
+
+```typescript
+// Create
+const folder = await client.createFolder({ projectId: project.id, name: 'images' });
+
+// Create nested
+await client.createFolder({ projectId: project.id, parentId: folder.id, name: '2024' });
+
+// List (paginated)
+const folders = await client.listFolders(project.id, { page: 1, limit: 20 });
+
+// Get by ID
+const f = await client.getFolder(folder.id);
+
+// List children
+const children = await client.listFolderChildren(folder.id);
+
+// Delete
+await client.deleteFolder(folder.id);
+```
+
+### Files
+
+```typescript
+// Upload (Node.js Buffer or browser Blob)
+const file = await client.uploadFile(project.id, buffer, 'photo.jpg');
+const file = await client.uploadFile(project.id, buffer, 'photo.jpg', {
+  folderId: folder.id,
+  visibility: 'public',
+});
+
+// List (paginated, optional projectId/folderId filter)
+const files = await client.listFiles({ projectId: project.id, page: 1, limit: 24 });
+
+// Get metadata
+const meta = await client.getFile(file.id);
+
+// Update metadata
+await client.updateFile(file.id, { folderId: otherFolder.id, visibility: 'public' });
+
+// Delete
+await client.deleteFile(file.id);
+
+// Stream URL (for <video>, <audio>, <img> tags)
+const streamUrl = client.getStreamUrl(file.id);
+
+// Download URL
+const downloadUrl = client.getDownloadUrl(file.id);
+```
+
+### Exported Types
+
+```typescript
+import type {
+  Project,
+  ApiKey,
+  Folder,
+  FileMetadata,
+  PaginatedResult,
+  FileVisibility,
+} from '@media-vault/sdk';
+```
+
+### Environment Support
+
+| Platform        | Status           |
+| --------------- | ---------------- |
+| Node.js (>= 18) | ✅ Supported     |
+| Browser         | ✅ Supported     |
+| React / Next.js | ✅ Works (axios) |
+| Vue / Nuxt      | ✅ Works (axios) |
+| React Native    | 🔜 Upcoming      |
+| Deno            | 🔜 Upcoming      |
+| Bun             | 🔜 Upcoming      |
+| Python SDK      | 🔜 Upcoming      |
+| PHP SDK         | 🔜 Upcoming      |
 
 ## Deployment
 
