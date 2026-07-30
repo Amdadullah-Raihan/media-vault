@@ -4,7 +4,7 @@ import { useDropzone } from 'react-dropzone';
 import { useUploadFileMutation } from '@/services/files.service';
 import { useGetProjectsQuery } from '@/services/projects.service';
 import { PageHeader } from '@/components/shared';
-import { Select, Progress } from '@/components/ui';
+import { Select, Progress, Button } from '@/components/ui';
 import { PageSkeleton } from '@/components/ui';
 import {
   Upload,
@@ -14,6 +14,7 @@ import {
   XCircle,
   AlertCircle,
   Loader2,
+  Settings,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { formatFileSize } from '@/utils';
@@ -122,6 +123,12 @@ export default function UploadPage() {
       <PageHeader
         title="Upload Files"
         description="Drag and drop files to upload to your MediaVault."
+        actions={
+          <Button variant="outline" size="sm" onClick={() => navigate('/settings')}>
+            <Settings className="mr-1.5 h-4 w-4" />
+            Upload Rules
+          </Button>
+        }
       />
 
       {/* Project Selection */}

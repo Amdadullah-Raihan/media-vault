@@ -6,6 +6,7 @@ import { apiKeysApi } from '@/services/api-keys.service';
 import { filesApi } from '@/services/files.service';
 import { foldersApi } from '@/services/folders.service';
 import { settingsApi } from '@/services/settings.service';
+import { uploadRulesApi } from '@/services/upload-rules.service';
 import uiReducer from '@/redux/slices/ui.slice';
 
 export const store = configureStore({
@@ -17,6 +18,7 @@ export const store = configureStore({
     [filesApi.reducerPath]: filesApi.reducer,
     [foldersApi.reducerPath]: foldersApi.reducer,
     [settingsApi.reducerPath]: settingsApi.reducer,
+    [uploadRulesApi.reducerPath]: uploadRulesApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware().concat(
@@ -26,6 +28,7 @@ export const store = configureStore({
       filesApi.middleware,
       foldersApi.middleware,
       settingsApi.middleware,
+      uploadRulesApi.middleware,
     ),
 });
 

@@ -13,6 +13,7 @@ import {
   FileController,
   AuthController,
   SettingsController,
+  UploadRulesController,
 } from '../controllers';
 import { SettingsRepository, SessionRepository } from '../repositories';
 import { AuthService } from '../services';
@@ -35,6 +36,7 @@ const apiKeyController = new ApiKeyController();
 const folderController = new FolderController();
 const fileController = new FileController();
 const settingsController = new SettingsController();
+const uploadRulesController = new UploadRulesController();
 
 const config = getConfig();
 
@@ -72,6 +74,19 @@ router.get('/settings', (req, res, next) => {
   });
 });
 /* eslint-enable @typescript-eslint/no-unsafe-argument */
+
+// Upload Rules
+router.get('/upload-rules', uploadRulesController.list);
+router.patch(
+  '/upload-rules/category/:category',
+  authenticate,
+  uploadRulesController.updateCategory,
+);
+router.patch(
+  '/upload-rules/extension/:category/:extension',
+  authenticate,
+  uploadRulesController.updateExtension,
+);
 
 // =========================================================================
 // Projects

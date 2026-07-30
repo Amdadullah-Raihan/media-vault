@@ -14,9 +14,8 @@ import {
   PaginatedResult,
   FileMetadata,
 } from '../core/types';
-import { NotFoundError, PayloadTooLargeError, UnsupportedMediaTypeError } from '../core/errors';
-import { isMimeTypeAllowed } from '../utils/mime';
-import { getConfig } from '../config';
+import { NotFoundError } from '../core/errors';
+import { UploadValidator } from './upload-validator';
 import { getLogger } from '../utils/logger';
 import { v4 as uuidv4 } from 'uuid';
 import path from 'node:path';
@@ -25,6 +24,7 @@ import { Readable } from 'node:stream';
 export class FileService {
   private readonly repo = new FileMetadataRepository();
   private readonly storage = getStorageDriver();
+  private readonly validator = new UploadValidator();
   private readonly logger = getLogger().child({ service: 'FileService' });
 
   // ---------------------------------------------------------------------------
@@ -36,15 +36,24 @@ export class FileService {
     file: Express.Multer.File,
     options?: { folderId?: string | null; visibility?: FileVisibility },
   ): Promise<FileMetadata> {
-    // Validate MIME type
-    if (!isMimeTypeAllowed(file.mimetype)) {
-      throw new UnsupportedMediaTypeError(file.mimetype);
-    }
+    // Validate via centralized upload rules
+    const validation = await this.validator.validate({
+      buffer: file.buffer,
+      originalname: file.originalname,
+      mimetype: file.mimetype,
+      size: file.size,
+    });
 
-    // Validate size
-    const config = getConfig();
-    if (file.size > config.storage.maxFileSizeBytes) {
-      throw new PayloadTooLargeError(config.storage.maxFileSizeBytes);
+    if (!validation.valid) {
+      const err = new Error(validation.error.message) as Error & {
+        statusCode: number;
+        errorCode: string;
+        details?: Record<string, unknown>;
+      };
+      err.statusCode = 400;
+      err.errorCode = validation.error.code;
+      err.details = validation.error.details;
+      throw err;
     }
 
     // Generate unique filename

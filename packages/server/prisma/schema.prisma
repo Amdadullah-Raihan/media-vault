@@ -11,6 +11,7 @@ generator client {
 
 datasource db {
     provider = "sqlite"
+    url      = env("DATABASE_URL")
 }
 
 // ---------------------------------------------------------------------------
@@ -107,6 +108,23 @@ model FileMetadata {
 model Settings {
     key   String @id
     value String
+}
+
+// ---------------------------------------------------------------------------
+// UploadRule – per-category and per-extension upload limits
+// ---------------------------------------------------------------------------
+
+model UploadRule {
+    id        String   @id @default(uuid())
+    category  String
+    extension String?
+    enabled   Boolean  @default(true)
+    maxSize   Int
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    @@index([category])
+    @@index([category, extension])
 }
 
 // ---------------------------------------------------------------------------
