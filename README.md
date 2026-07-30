@@ -58,6 +58,17 @@ npm run dev
 
 The server starts on `http://localhost:3000` by default.
 
+### Default Admin Credentials
+
+The dashboard uses the following defaults from `.env`:
+
+| Variable         | Default       |
+| ---------------- | ------------- |
+| `ADMIN_USERNAME` | `admin`       |
+| `ADMIN_PASSWORD` | `admin123456` |
+
+**Change these before deploying.** You can update the password from the dashboard Settings page after logging in — changes persist in the database and survive restarts.
+
 ## API Overview
 
 All endpoints are prefixed with `/api/v1`.
@@ -133,6 +144,62 @@ const file = await client.uploadFile(project.id, buffer, 'photo.jpg');
 const streamUrl = client.getStreamUrl(file.id);
 ```
 
+## Deployment
+
+MediaVault is a single Node.js process backed by SQLite — no external databases or caches required.
+
+### VPS / Dedicated Server
+
+```bash
+# 1. Clone and install
+git clone <repo-url> media-vault && cd media-vault && npm install
+
+# 2. Build the dashboard for production
+npm run build --workspace=@media-vault/dashboard
+
+# 3. Configure .env — set ADMIN_USERNAME, ADMIN_PASSWORD, MEDIAVAULT_SIGNED_URL_SECRET
+cp packages/server/.env.example packages/server/.env
+nano packages/server/.env
+
+# 4. Run database migration
+npm run db:migrate --workspace=@media-vault/server
+
+# 5. Start with PM2 (recommended)
+npm install -g pm2
+NODE_ENV=production pm2 start packages/server/dist/index.js --name mediavault
+pm2 save && pm2 startup
+```
+
+### Shared Hosting (cPanel / Plesk)
+
+- **Node.js version:** >= 18 required
+- **Application root:** Point to the repo root
+- **Startup file:** `packages/server/dist/index.js` (build with `npm run build --workspace=@media-vault/server`)
+- **SQLite:** Requires write permission on the `data/` directory — no database server needed
+- **Uploads:** Set `MEDIAVAULT_STORAGE_LOCAL_PATH` to a path outside the web root
+- **Dashboard:** Build it first (`npm run build --workspace=@media-vault/dashboard`), then the server serves it automatically in production
+
+### Reverse Proxy (nginx)
+
+```nginx
+server {
+    listen 80;
+    server_name media.example.com;
+
+    client_max_body_size 100M;
+
+    location / {
+        proxy_pass http://127.0.0.1:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_cache_bypass $http_upgrade;
+    }
+}
+```
+
 ## Configuration
 
 All settings are configurable via environment variables. See `.env.example` for all options.
@@ -146,6 +213,8 @@ All settings are configurable via environment variables. See `.env.example` for 
 | `MEDIAVAULT_STORAGE_LOCAL_PATH` | `./uploads`                 | Local storage directory             |
 | `MEDIAVAULT_MAX_FILE_SIZE`      | `104857600`                 | Max upload size in bytes (100MB)    |
 | `MEDIAVAULT_AUTH_ENABLED`       | `true`                      | Enable/disable authentication       |
+| `ADMIN_USERNAME`                | `admin`                     | Dashboard admin username            |
+| `ADMIN_PASSWORD`                | `admin123456`               | Dashboard admin password            |
 | `MEDIAVAULT_SIGNED_URL_SECRET`  | —                           | Secret for signed URL generation    |
 
 ## Storage Drivers
@@ -159,4 +228,3 @@ Future drivers: S3, MinIO, Cloudinary, Azure Blob, Google Cloud Storage.
 ## License
 
 MIT
-# media-vault
