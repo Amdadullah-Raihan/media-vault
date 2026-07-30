@@ -352,7 +352,7 @@ function UploadRulesSection() {
                 <div className="flex items-center gap-1.5 ml-auto shrink-0">
                   <input
                     type="number"
-                    className="h-7 w-14 rounded border px-1.5 text-xs"
+                    className="h-7 w-14 rounded border border-input bg-background px-1.5 text-xs text-foreground"
                     defaultValue={String(catSize.value)}
                     min={0}
                     onBlur={(e) => {
@@ -363,7 +363,7 @@ function UploadRulesSection() {
                     aria-label={`${cat.label} max size`}
                   />
                   <select
-                    className="h-7 rounded border px-1 text-xs"
+                    className="h-7 rounded border border-input bg-background px-1 text-xs text-foreground"
                     defaultValue={catSize.unit}
                     onChange={(e) => {
                       const input = e.target.previousSibling as HTMLInputElement;
@@ -428,7 +428,7 @@ function UploadRulesSection() {
                           )}
                           <input
                             type="number"
-                            className="h-6 w-12 rounded border px-1 text-xs"
+                            className="h-6 w-12 rounded border border-input bg-background px-1 text-xs text-foreground"
                             defaultValue={String(extSize.value)}
                             min={0}
                             onBlur={(e) => {
@@ -439,7 +439,7 @@ function UploadRulesSection() {
                             aria-label={`${ext.extension} max size`}
                           />
                           <select
-                            className="h-6 rounded border px-1 text-xs"
+                            className="h-6 rounded border border-input bg-background px-1 text-xs text-foreground"
                             defaultValue={extSize.unit}
                             onChange={(e) => {
                               const input = e.target.previousSibling as HTMLInputElement;

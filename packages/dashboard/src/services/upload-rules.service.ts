@@ -29,6 +29,8 @@ export const uploadRulesApi = createApi({
   endpoints: (builder) => ({
     getUploadRules: builder.query<UploadRulesResponse, void>({
       query: () => '/upload-rules',
+      transformResponse: (response: { success: boolean; data: UploadRulesResponse }) =>
+        response.data,
       providesTags: ['UploadRules'],
     }),
     updateCategory: builder.mutation<
