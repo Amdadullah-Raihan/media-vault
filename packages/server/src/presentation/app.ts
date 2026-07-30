@@ -18,7 +18,7 @@ const VITE_PORT = 5173;
 export async function createApp(): Promise<express.Application> {
   const app = express();
   const logger = getLogger();
-  const isDev = process.env['NODE_ENV'] !== 'production';
+  const isDev = process.env.NODE_ENV !== 'production';
 
   // ---------------------------------------------------------------------------
   // Global middleware
@@ -75,7 +75,8 @@ export async function createApp(): Promise<express.Application> {
     // Proxy all non-API requests to Vite
     app.use((req, res, next) => {
       if (req.path.startsWith('/api/') || req.path === '/health') {
-        return next();
+        next();
+        return;
       }
 
       const proxyReq = http.request(
@@ -91,7 +92,9 @@ export async function createApp(): Promise<express.Application> {
           proxyRes.pipe(res);
         },
       );
-      proxyReq.on('error', () => next());
+      proxyReq.on('error', () => {
+        next();
+      });
       req.pipe(proxyReq);
     });
 

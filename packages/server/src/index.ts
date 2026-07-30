@@ -14,7 +14,7 @@ async function main(): Promise<void> {
   const app = await createApp();
 
   const server = app.listen(config.server.port, config.server.host, () => {
-    const baseUrl = `http://${config.server.host === '0.0.0.0' ? 'localhost' : config.server.host}:${config.server.port}`;
+    const baseUrl = `http://${config.server.host === '0.0.0.0' ? 'localhost' : config.server.host}:${String(config.server.port)}`;
     logger.info(
       { host: config.server.host, port: config.server.port },
       'MediaVault server started',
@@ -24,12 +24,18 @@ async function main(): Promise<void> {
   });
 
   // Graceful shutdown
-  const shutdown = async (signal: string): Promise<void> => {
+  const shutdown = (signal: string): void => {
     logger.info({ signal }, 'Shutting down...');
-    server.close(async () => {
-      await disconnectPrisma();
-      logger.info('Server stopped');
-      process.exit(0);
+    server.close(() => {
+      disconnectPrisma()
+        .then(() => {
+          logger.info('Server stopped');
+          process.exit(0);
+        })
+        .catch((err: unknown) => {
+          logger.error({ err }, 'Error disconnecting Prisma');
+          process.exit(1);
+        });
     });
 
     // Force exit after 10s
@@ -39,11 +45,15 @@ async function main(): Promise<void> {
     }, 10000);
   };
 
-  process.on('SIGTERM', () => shutdown('SIGTERM'));
-  process.on('SIGINT', () => shutdown('SIGINT'));
+  process.on('SIGTERM', () => {
+    shutdown('SIGTERM');
+  });
+  process.on('SIGINT', () => {
+    shutdown('SIGINT');
+  });
 }
 
-main().catch((err) => {
+main().catch((err: unknown) => {
   const logger = getLogger();
   logger.error({ err }, 'Failed to start server');
   process.exit(1);

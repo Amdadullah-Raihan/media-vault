@@ -19,6 +19,7 @@ const SESSION_COOKIE = 'mv_sid';
  * Extend Express Request to carry authenticated context.
  */
 declare global {
+  // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace Express {
     interface Request {
       /** The project ID that owns the API key, or null. */
@@ -49,7 +50,7 @@ export async function authenticate(req: Request, res: Response, next: NextFuncti
   // Path 1: Dashboard session cookie
   // -----------------------------------------------------------------------
 
-  const sessionId = req.cookies?.[SESSION_COOKIE] as string | undefined;
+  const sessionId = req.cookies[SESSION_COOKIE] as string | undefined;
 
   if (sessionId) {
     const session = await prisma.session.findUnique({ where: { id: sessionId } });
@@ -73,7 +74,9 @@ export async function authenticate(req: Request, res: Response, next: NextFuncti
 
     // Expired or invalid — clear cookie
     if (session) {
-      await prisma.session.delete({ where: { id: sessionId } }).catch(() => {});
+      await prisma.session.delete({ where: { id: sessionId } }).catch(() => {
+        /* best-effort */
+      });
     }
   }
 

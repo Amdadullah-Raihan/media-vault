@@ -94,10 +94,10 @@ export class FileMetadataRepository {
     const skip = (page - 1) * limit;
 
     const where: Record<string, unknown> = {};
-    if (projectId) where['projectId'] = projectId;
-    if (folderId) where['folderId'] = folderId;
+    if (projectId) where.projectId = projectId;
+    if (folderId) where.folderId = folderId;
     if (search) {
-      where['OR'] = [
+      where.OR = [
         { originalFilename: { contains: search } },
         { filename: { contains: search } },
       ];

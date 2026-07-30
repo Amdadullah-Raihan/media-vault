@@ -136,6 +136,8 @@ router.delete(
 // Files
 // =========================================================================
 
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
 router.post('/files/upload', authenticate, upload.single('file'), fileController.upload);
 
 router.get('/files', authenticate, fileController.list);
@@ -172,5 +174,7 @@ router.delete(
   validate(uuidParamSchema, 'params'),
   fileController.delete,
 );
+
+/* eslint-enable @typescript-eslint/no-unsafe-argument */
 
 export { router as apiRouter };

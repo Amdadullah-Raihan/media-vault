@@ -73,7 +73,7 @@ export class PayloadTooLargeError extends AppError {
   public readonly errorCode = 'PAYLOAD_TOO_LARGE';
 
   public constructor(maxBytes: number) {
-    super(`File exceeds the maximum upload size of ${maxBytes} bytes`);
+    super(`File exceeds the maximum upload size of ${String(maxBytes)} bytes`);
   }
 }
 

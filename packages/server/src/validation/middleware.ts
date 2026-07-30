@@ -28,7 +28,7 @@ export function validate(schema: ZodSchema, target: ValidationTarget = 'body') {
   };
 }
 
-function formatZodErrors(zodError: ZodError): Array<{ path: string; message: string }> {
+function formatZodErrors(zodError: ZodError): { path: string; message: string }[] {
   return zodError.errors.map((e) => ({
     path: e.path.join('.'),
     message: e.message,

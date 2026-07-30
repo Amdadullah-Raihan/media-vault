@@ -101,6 +101,7 @@ export class LocalStorageDriver implements StorageDriver {
     return filePath;
   }
 
+  // eslint-disable-next-line @typescript-eslint/require-await
   public async generateSignedUrl(
     _filename: string,
     _projectId: string,

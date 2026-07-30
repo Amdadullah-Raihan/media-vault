@@ -10,12 +10,19 @@ import { ok, created, noContent } from '../utils/responses';
 export class FolderController {
   private readonly service = new FolderService();
 
+  private paramId(req: Request): string {
+    const id = req.params.id;
+    if (!id) throw new Error('Missing id param');
+    return id;
+  }
+
   public create = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
+      const { projectId, parentId, name } = req.body as Record<string, unknown>;
       const input: CreateFolderInput = {
-        projectId: req.body.projectId as string,
-        parentId: (req.body.parentId as string | null) ?? null,
-        name: req.body.name as string,
+        projectId: projectId as string,
+        parentId: (parentId as string | null) ?? null,
+        name: name as string,
       };
       const folder = await this.service.create(input);
       created(res, folder);
@@ -26,7 +33,7 @@ export class FolderController {
 
   public getById = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const folder = await this.service.getById(req.params.id!);
+      const folder = await this.service.getById(this.paramId(req));
       ok(res, folder);
     } catch (err) {
       next(err);
@@ -58,7 +65,7 @@ export class FolderController {
 
   public children = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const children = await this.service.listChildren(req.params.id!);
+      const children = await this.service.listChildren(this.paramId(req));
       ok(res, children);
     } catch (err) {
       next(err);
@@ -67,7 +74,7 @@ export class FolderController {
 
   public delete = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      await this.service.delete(req.params.id!);
+      await this.service.delete(this.paramId(req));
       noContent(res);
     } catch (err) {
       next(err);

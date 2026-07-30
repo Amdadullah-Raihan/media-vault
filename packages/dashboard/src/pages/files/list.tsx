@@ -40,6 +40,38 @@ const mimeIconMap: Record<string, React.ElementType> = {
   other: File,
 };
 
+function FileThumbnail({ file, size }: { file: FileMetadata; size?: 'sm' | 'lg' }) {
+  const category = getMimeCategory(file.mimeType);
+  const streamUrl = `/api/v1/files/${file.id}/stream`;
+
+  if (category === 'image') {
+    const dims = size === 'lg' ? 'h-32 w-full' : 'h-8 w-8';
+    return (
+      <img
+        src={streamUrl}
+        alt={file.originalFilename}
+        className={`${dims} rounded object-cover`}
+        loading="lazy"
+      />
+    );
+  }
+
+  const IconComp = mimeIconMap[category] ?? File;
+  const iconDims = size === 'lg' ? 'h-10 w-10' : 'h-4 w-4';
+  const bg =
+    size === 'lg' ? 'flex h-32 w-full items-center justify-center rounded-lg bg-muted' : '';
+
+  if (size === 'lg') {
+    return (
+      <div className={bg}>
+        <IconComp className="h-10 w-10 text-muted-foreground" />
+      </div>
+    );
+  }
+
+  return <IconComp className={`${iconDims} text-muted-foreground shrink-0`} />;
+}
+
 export default function FilesPage() {
   const navigate = useNavigate();
   const viewMode = useAppSelector((s) => s.ui.viewMode);
@@ -191,60 +223,57 @@ function FileGrid({
   return (
     <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
       {files.map((file) => {
-        const category = getMimeCategory(file.mimeType);
-        const IconComp = mimeIconMap[category] ?? File;
-
         return (
           <div
             key={file.id}
-            className="group rounded-lg border bg-card p-4 transition-colors hover:border-primary/50"
+            className="group rounded-lg border bg-card transition-colors hover:border-primary/50"
           >
-            <div className="flex items-start justify-between">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted">
-                <IconComp className="h-5 w-5 text-muted-foreground" />
+            <FileThumbnail file={file} size="lg" />
+            <div className="p-4">
+              <div className="flex justify-end">
+                <DropdownMenu
+                  trigger={
+                    <button
+                      className="rounded p-1 opacity-0 transition-opacity hover:bg-accent group-hover:opacity-100"
+                      aria-label="File actions"
+                    >
+                      <MoreVertical className="h-4 w-4" />
+                    </button>
+                  }
+                  align="end"
+                >
+                  <DropdownItem onClick={() => onView(file)}>
+                    <Eye className="mr-2 h-4 w-4" />
+                    Preview
+                  </DropdownItem>
+                  <DropdownItem onClick={() => onDownload(file)}>
+                    <Download className="mr-2 h-4 w-4" />
+                    Download
+                  </DropdownItem>
+                  <DropdownItem onClick={() => onCopyUrl(file)}>
+                    <Copy className="mr-2 h-4 w-4" />
+                    Copy URL
+                  </DropdownItem>
+                  <DropdownSeparator />
+                  <DropdownItem onClick={() => onDelete(file)} destructive>
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    Delete
+                  </DropdownItem>
+                </DropdownMenu>
               </div>
-              <DropdownMenu
-                trigger={
-                  <button
-                    className="rounded p-1 opacity-0 transition-opacity hover:bg-accent group-hover:opacity-100"
-                    aria-label="File actions"
-                  >
-                    <MoreVertical className="h-4 w-4" />
-                  </button>
-                }
-                align="end"
-              >
-                <DropdownItem onClick={() => onView(file)}>
-                  <Eye className="mr-2 h-4 w-4" />
-                  Preview
-                </DropdownItem>
-                <DropdownItem onClick={() => onDownload(file)}>
-                  <Download className="mr-2 h-4 w-4" />
-                  Download
-                </DropdownItem>
-                <DropdownItem onClick={() => onCopyUrl(file)}>
-                  <Copy className="mr-2 h-4 w-4" />
-                  Copy URL
-                </DropdownItem>
-                <DropdownSeparator />
-                <DropdownItem onClick={() => onDelete(file)} destructive>
-                  <Trash2 className="mr-2 h-4 w-4" />
-                  Delete
-                </DropdownItem>
-              </DropdownMenu>
+              <p className="mt-3 truncate text-sm font-medium" title={file.originalFilename}>
+                {file.originalFilename}
+              </p>
+              <div className="mt-2 flex items-center gap-2">
+                <Badge variant="secondary" className="text-xs">
+                  {file.extension.toUpperCase()}
+                </Badge>
+                <span className="text-xs text-muted-foreground">{formatFileSize(file.size)}</span>
+              </div>
+              <p className="mt-1 text-xs text-muted-foreground">
+                {formatRelativeTime(file.createdAt)}
+              </p>
             </div>
-            <p className="mt-3 truncate text-sm font-medium" title={file.originalFilename}>
-              {file.originalFilename}
-            </p>
-            <div className="mt-2 flex items-center gap-2">
-              <Badge variant="secondary" className="text-xs">
-                {file.extension.toUpperCase()}
-              </Badge>
-              <span className="text-xs text-muted-foreground">{formatFileSize(file.size)}</span>
-            </div>
-            <p className="mt-1 text-xs text-muted-foreground">
-              {formatRelativeTime(file.createdAt)}
-            </p>
           </div>
         );
       })}
@@ -270,84 +299,83 @@ function FileTable({
   onView: (f: FileMetadata) => void;
 }) {
   return (
-    <div className="overflow-hidden rounded-lg border">
-      <table className="w-full text-sm">
-        <thead>
-          <tr className="border-b bg-muted/50">
-            <th className="px-4 py-3 text-left font-medium">Name</th>
-            <th className="px-4 py-3 text-left font-medium hidden sm:table-cell">Type</th>
-            <th className="px-4 py-3 text-left font-medium hidden md:table-cell">Size</th>
-            <th className="px-4 py-3 text-left font-medium hidden lg:table-cell">Date</th>
-            <th className="px-4 py-3 text-right font-medium">Actions</th>
-          </tr>
-        </thead>
-        <tbody className="divide-y">
-          {files.map((file) => {
-            const category = getMimeCategory(file.mimeType);
-            const IconComp = mimeIconMap[category] ?? File;
-
-            return (
-              <tr key={file.id} className="hover:bg-muted/50 transition-colors">
-                <td className="px-4 py-3">
-                  <div className="flex items-center gap-3">
-                    <IconComp className="h-4 w-4 text-muted-foreground shrink-0" />
-                    <span className="truncate font-medium max-w-[200px]">
-                      {file.originalFilename}
-                    </span>
-                  </div>
-                </td>
-                <td className="px-4 py-3 text-muted-foreground hidden sm:table-cell">
-                  {file.mimeType}
-                </td>
-                <td className="px-4 py-3 text-muted-foreground hidden md:table-cell">
-                  {formatFileSize(file.size)}
-                </td>
-                <td className="px-4 py-3 text-muted-foreground hidden lg:table-cell">
-                  {formatRelativeTime(file.createdAt)}
-                </td>
-                <td className="px-4 py-3 text-right">
-                  <div className="flex items-center justify-end gap-1">
-                    <Button
-                      variant="ghost"
-                      size="icon-sm"
-                      onClick={() => onView(file)}
-                      aria-label="Preview"
-                    >
-                      <Eye className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon-sm"
-                      onClick={() => onDownload(file)}
-                      aria-label="Download"
-                    >
-                      <Download className="h-4 w-4" />
-                    </Button>
-                    <DropdownMenu
-                      trigger={
-                        <Button variant="ghost" size="icon-sm" aria-label="More actions">
-                          <MoreVertical className="h-4 w-4" />
-                        </Button>
-                      }
-                      align="end"
-                    >
-                      <DropdownItem onClick={() => onCopyUrl(file)}>
-                        <Copy className="mr-2 h-4 w-4" />
-                        Copy URL
-                      </DropdownItem>
-                      <DropdownSeparator />
-                      <DropdownItem onClick={() => onDelete(file)} destructive>
-                        <Trash2 className="mr-2 h-4 w-4" />
-                        Delete
-                      </DropdownItem>
-                    </DropdownMenu>
-                  </div>
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
+    <div className="rounded-lg border">
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b bg-muted/50">
+              <th className="px-4 py-3 text-left font-medium">Name</th>
+              <th className="px-4 py-3 text-left font-medium hidden sm:table-cell">Type</th>
+              <th className="px-4 py-3 text-left font-medium hidden md:table-cell">Size</th>
+              <th className="px-4 py-3 text-left font-medium hidden lg:table-cell">Date</th>
+              <th className="px-4 py-3 text-right font-medium">Actions</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y">
+            {files.map((file) => {
+              return (
+                <tr key={file.id} className="hover:bg-muted/50 transition-colors">
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-3">
+                      <FileThumbnail file={file} size="sm" />
+                      <span className="truncate font-medium max-w-[200px]">
+                        {file.originalFilename}
+                      </span>
+                    </div>
+                  </td>
+                  <td className="px-4 py-3 text-muted-foreground hidden sm:table-cell">
+                    {file.mimeType}
+                  </td>
+                  <td className="px-4 py-3 text-muted-foreground hidden md:table-cell">
+                    {formatFileSize(file.size)}
+                  </td>
+                  <td className="px-4 py-3 text-muted-foreground hidden lg:table-cell">
+                    {formatRelativeTime(file.createdAt)}
+                  </td>
+                  <td className="px-4 py-3 text-right">
+                    <div className="flex items-center justify-end gap-1">
+                      <Button
+                        variant="ghost"
+                        size="icon-sm"
+                        onClick={() => onView(file)}
+                        aria-label="Preview"
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon-sm"
+                        onClick={() => onDownload(file)}
+                        aria-label="Download"
+                      >
+                        <Download className="h-4 w-4" />
+                      </Button>
+                      <DropdownMenu
+                        trigger={
+                          <Button variant="ghost" size="icon-sm" aria-label="More actions">
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        }
+                        align="end"
+                      >
+                        <DropdownItem onClick={() => onCopyUrl(file)}>
+                          <Copy className="mr-2 h-4 w-4" />
+                          Copy URL
+                        </DropdownItem>
+                        <DropdownSeparator />
+                        <DropdownItem onClick={() => onDelete(file)} destructive>
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          Delete
+                        </DropdownItem>
+                      </DropdownMenu>
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

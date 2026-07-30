@@ -20,6 +20,7 @@ import { getConfig } from '../config';
 import { getLogger } from '../utils/logger';
 import { v4 as uuidv4 } from 'uuid';
 import path from 'node:path';
+import { Readable } from 'node:stream';
 
 export class FileService {
   private readonly repo = new FileMetadataRepository();
@@ -57,7 +58,7 @@ export class FileService {
         originalFilename: file.originalname,
         mimeType: file.mimetype,
         size: file.size,
-        stream: file.stream,
+        stream: Readable.from(file.buffer),
       },
       projectId,
     );
@@ -173,8 +174,8 @@ export class FileService {
     }
 
     const updateData: Record<string, unknown> = {};
-    if (data.folderId !== undefined) updateData['folderId'] = data.folderId;
-    if (data.visibility !== undefined) updateData['visibility'] = data.visibility;
+    if (data.folderId !== undefined) updateData.folderId = data.folderId;
+    if (data.visibility !== undefined) updateData.visibility = data.visibility;
 
     return this.repo.update(id, updateData as Partial<CreateFileMetadataInput>);
   }

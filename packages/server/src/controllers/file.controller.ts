@@ -10,6 +10,12 @@ import { ok, created, noContent } from '../utils/responses';
 export class FileController {
   private readonly service = new FileService();
 
+  private paramId(req: Request): string {
+    const id = req.params.id;
+    if (!id) throw new Error('Missing id param');
+    return id;
+  }
+
   // ---------------------------------------------------------------------------
   // Upload
   // ---------------------------------------------------------------------------
@@ -25,8 +31,8 @@ export class FileController {
         return;
       }
 
-      const projectId = req.body.projectId as string;
-      if (!projectId) {
+      const { projectId, folderId, visibility } = req.body as Record<string, unknown>;
+      if (!projectId || typeof projectId !== 'string') {
         res.status(400).json({
           success: false,
           error: { code: 'VALIDATION_ERROR', message: 'projectId is required' },
@@ -35,8 +41,8 @@ export class FileController {
       }
 
       const metadata = await this.service.upload(projectId, file, {
-        folderId: (req.body.folderId as string | null) ?? null,
-        visibility: req.body.visibility as FileVisibility | undefined,
+        folderId: (folderId as string | null) ?? null,
+        visibility: visibility as FileVisibility | undefined,
       });
 
       created(res, metadata);
@@ -51,14 +57,16 @@ export class FileController {
 
   public download = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const { metadata, stream } = await this.service.download(req.params.id!);
+      const { metadata, stream } = await this.service.download(this.paramId(req));
 
       res.setHeader('Content-Type', metadata.mimeType);
       res.setHeader('Content-Disposition', `attachment; filename="${metadata.originalFilename}"`);
       res.setHeader('Content-Length', metadata.size);
 
       stream.pipe(res);
-      stream.on('error', (err) => next(err));
+      stream.on('error', (err) => {
+        next(err);
+      });
     } catch (err) {
       next(err);
     }
@@ -72,7 +80,7 @@ export class FileController {
     try {
       const range = req.headers.range;
       const { metadata, stream, start, end, totalSize } = await this.service.stream(
-        req.params.id!,
+        this.paramId(req),
         range,
       );
 
@@ -80,7 +88,10 @@ export class FileController {
 
       if (range) {
         res.status(206);
-        res.setHeader('Content-Range', `bytes ${start}-${end}/${totalSize}`);
+        res.setHeader(
+          'Content-Range',
+          `bytes ${String(start)}-${String(end)}/${String(totalSize)}`,
+        );
         res.setHeader('Accept-Ranges', 'bytes');
         res.setHeader('Content-Length', chunkSize);
       } else {
@@ -91,7 +102,9 @@ export class FileController {
       res.setHeader('Content-Disposition', `inline; filename="${metadata.originalFilename}"`);
 
       stream.pipe(res);
-      stream.on('error', (err) => next(err));
+      stream.on('error', (err) => {
+        next(err);
+      });
     } catch (err) {
       next(err);
     }
@@ -103,7 +116,7 @@ export class FileController {
 
   public getById = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const metadata = await this.service.getById(req.params.id!);
+      const metadata = await this.service.getById(this.paramId(req));
       ok(res, metadata);
     } catch (err) {
       next(err);
@@ -138,9 +151,10 @@ export class FileController {
 
   public update = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const metadata = await this.service.update(req.params.id!, {
-        folderId: req.body.folderId as string | null | undefined,
-        visibility: req.body.visibility as FileVisibility | undefined,
+      const { folderId, visibility } = req.body as Record<string, unknown>;
+      const metadata = await this.service.update(this.paramId(req), {
+        folderId: folderId as string | null | undefined,
+        visibility: visibility as FileVisibility | undefined,
       });
       ok(res, metadata);
     } catch (err) {
@@ -150,7 +164,7 @@ export class FileController {
 
   public delete = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      await this.service.delete(req.params.id!);
+      await this.service.delete(this.paramId(req));
       noContent(res);
     } catch (err) {
       next(err);

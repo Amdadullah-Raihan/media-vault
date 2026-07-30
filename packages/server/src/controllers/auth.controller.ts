@@ -9,7 +9,7 @@ import { ok, error } from '../utils/responses';
 const SESSION_COOKIE = 'mv_sid';
 const COOKIE_OPTIONS = {
   httpOnly: true,
-  secure: process.env['NODE_ENV'] === 'production',
+  secure: process.env.NODE_ENV === 'production',
   sameSite: 'lax' as const,
   path: '/',
   maxAge: 24 * 60 * 60 * 1000, // 24 hours
@@ -50,7 +50,7 @@ export class AuthController {
   // -----------------------------------------------------------------------
 
   logout = async (req: Request, res: Response, _next: NextFunction): Promise<void> => {
-    const sessionId = req.cookies?.[SESSION_COOKIE] as string | undefined;
+    const sessionId = req.cookies[SESSION_COOKIE] as string | undefined;
 
     if (sessionId) {
       await this.authService.logout(sessionId);
@@ -65,7 +65,7 @@ export class AuthController {
   // -----------------------------------------------------------------------
 
   session = async (req: Request, res: Response, _next: NextFunction): Promise<void> => {
-    const sessionId = req.cookies?.[SESSION_COOKIE] as string | undefined;
+    const sessionId = req.cookies[SESSION_COOKIE] as string | undefined;
 
     if (!sessionId) {
       error(res, 401, 'UNAUTHORIZED', 'No active session.');

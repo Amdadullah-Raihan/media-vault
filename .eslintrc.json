@@ -4,7 +4,8 @@
   "parserOptions": {
     "ecmaVersion": 2022,
     "sourceType": "module",
-    "project": ["./tsconfig.base.json", "./packages/*/tsconfig.json"]
+    "tsconfigRootDir": ".",
+    "project": ["./packages/*/tsconfig.json"]
   },
   "plugins": ["@typescript-eslint"],
   "extends": [
@@ -18,6 +19,7 @@
     "@typescript-eslint/explicit-function-return-type": "warn",
     "@typescript-eslint/no-explicit-any": "error",
     "@typescript-eslint/prefer-readonly": "error",
+    "@typescript-eslint/no-misused-promises": ["error", { "checksVoidReturn": false }],
     "no-console": ["warn", { "allow": ["warn", "error", "info"] }]
   },
   "ignorePatterns": ["dist", "node_modules", "*.js", "*.mjs"]

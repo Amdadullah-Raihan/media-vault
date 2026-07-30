@@ -14,7 +14,7 @@ export function getPrisma(): PrismaClient {
   if (!_prisma) {
     const logger = getLogger();
 
-    _prisma = new PrismaClient({
+    const prisma = new PrismaClient({
       log: [
         { level: 'warn', emit: 'event' },
         { level: 'error', emit: 'event' },
@@ -22,10 +22,14 @@ export function getPrisma(): PrismaClient {
     });
 
     const childLogger = logger.child({ component: 'prisma' });
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (_prisma as any).$on('warn', (e: unknown) => childLogger.warn(e));
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (_prisma as any).$on('error', (e: unknown) => childLogger.error(e));
+    prisma.$on('warn', (e: unknown) => {
+      childLogger.warn(e);
+    });
+    prisma.$on('error', (e: unknown) => {
+      childLogger.error(e);
+    });
+
+    _prisma = prisma;
   }
   return _prisma;
 }

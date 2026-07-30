@@ -12,9 +12,10 @@ export class ApiKeyController {
 
   public create = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
+      const { projectId, label } = req.body as Record<string, unknown>;
       const input: CreateApiKeyInput = {
-        projectId: req.body.projectId as string,
-        label: req.body.label as string | undefined,
+        projectId: projectId as string,
+        label: label as string | undefined,
       };
       const result = await this.service.create(input);
       created(res, result);
@@ -45,7 +46,15 @@ export class ApiKeyController {
         });
         return;
       }
-      await this.service.delete(req.params.id!, projectId);
+      const id = req.params.id;
+      if (!id) {
+        res.status(400).json({
+          success: false,
+          error: { code: 'VALIDATION_ERROR', message: 'id param is required' },
+        });
+        return;
+      }
+      await this.service.delete(id, projectId);
       noContent(res);
     } catch (err) {
       next(err);
