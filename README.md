@@ -253,7 +253,46 @@ import type {
 
 ## Deployment
 
-MediaVault is a single Node.js process backed by SQLite — no external databases or caches required.
+MediaVault is a single Node.js process backed by SQLite — no external databases or caches required. The monorepo is the deployable unit. After building, the server automatically serves the dashboard from its relative path — no need to move files around.
+
+```bash
+# 1. Clone and install
+git clone <repo-url> media-vault && cd media-vault && npm install
+
+# 2. Build everything (SDK → CLI → Dashboard → Server)
+npm run build
+
+# 3. Configure environment
+cp packages/server/.env.example packages/server/.env
+nano packages/server/.env
+
+# 4. Run database migration
+npm run db:migrate --workspace=@media-vault/server
+
+# 5. Start (dev)
+npm run dev
+
+# Or start in production
+NODE_ENV=production node packages/server/dist/index.js
+```
+
+### Folder structure after build
+
+```
+media-vault/
+├── packages/
+│   ├── server/
+│   │   ├── dist/          # Compiled backend
+│   │   ├── data/          # SQLite database
+│   │   ├── uploads/       # File storage
+│   │   └── .env           # Configuration
+│   └── dashboard/
+│       └── dist/          # Built frontend (served by server)
+├── node_modules/
+└── package.json
+```
+
+The server resolves `packages/dashboard/dist/` relative to its own location — deploy the entire repo and it just works.
 
 ### VPS / Dedicated Server
 
@@ -261,8 +300,8 @@ MediaVault is a single Node.js process backed by SQLite — no external database
 # 1. Clone and install
 git clone <repo-url> media-vault && cd media-vault && npm install
 
-# 2. Build the dashboard for production
-npm run build --workspace=@media-vault/dashboard
+# 2. Build all packages
+npm run build
 
 # 3. Configure .env — set ADMIN_USERNAME, ADMIN_PASSWORD, MEDIAVAULT_SIGNED_URL_SECRET
 cp packages/server/.env.example packages/server/.env
@@ -280,11 +319,11 @@ pm2 save && pm2 startup
 ### Shared Hosting (cPanel / Plesk)
 
 - **Node.js version:** >= 18 required
-- **Application root:** Point to the repo root
-- **Startup file:** `packages/server/dist/index.js` (build with `npm run build --workspace=@media-vault/server`)
-- **SQLite:** Requires write permission on the `data/` directory — no database server needed
+- **Application root:** Point to the repo root (`media-vault/`)
+- **Startup file:** `packages/server/dist/index.js` — run `npm run build` first
+- **SQLite:** Requires write permission on `packages/server/data/` — no database server needed
 - **Uploads:** Set `MEDIAVAULT_STORAGE_LOCAL_PATH` to a path outside the web root
-- **Dashboard:** Build it first (`npm run build --workspace=@media-vault/dashboard`), then the server serves it automatically in production
+- **No global dist needed:** The server finds the dashboard at `../dashboard/dist/` relative to itself
 
 ### Reverse Proxy (nginx)
 
