@@ -1,12 +1,29 @@
 {
   "name": "@media-vault/sdk",
   "version": "1.0.0",
-  "private": true,
-  "description": "MediaVault TypeScript SDK – wraps the REST API",
+  "description": "MediaVault TypeScript SDK – wraps the REST API for Node.js and browsers",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-org/media-vault.git",
+    "directory": "packages/sdk"
+  },
+  "keywords": [
+    "media-vault",
+    "sdk",
+    "media",
+    "upload",
+    "storage",
+    "api"
+  ],
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsc",
+    "prepublishOnly": "npm run build",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
