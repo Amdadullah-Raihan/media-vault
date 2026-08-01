@@ -308,12 +308,41 @@ pm2 save && pm2 startup
 
 ### Shared Hosting (cPanel / Plesk)
 
-- **Node.js version:** >= 18 required
-- **Application root:** Point to the repo root (`media-vault/`)
-- **Startup file:** `packages/server/dist/index.js` — run `npm run build` first
-- **JSON:** Requires write permission on `packages/server/data/` — no database server needed
-- **Uploads:** Set `MEDIAVAULT_STORAGE_LOCAL_PATH` to a path outside the web root
-- **No global dist needed:** The server finds the dashboard at `../dashboard/dist/` relative to itself
+npm workspaces and hoisted `node_modules` don't work on most shared hosts. Use the flat deployment builder instead:
+
+```bash
+# 1. Clone, install, and build locally
+git clone <repo-url> media-vault && cd media-vault && npm install
+
+# 2. Build and create self-contained deployment package
+npm run deploy
+```
+
+This creates a `media-vault-deploy/` directory with a flat, self-contained structure:
+
+```
+media-vault-deploy/
+├── server.js            # Entry point (point cPanel here)
+├── package.json         # Flat, production-only dependencies
+├── node_modules/        # Self-contained (no workspaces)
+├── dist/                # Compiled server
+├── dashboard/
+│   └── dist/            # Built frontend
+└── .env.example         # Environment template
+```
+
+**Then on your shared host:**
+
+1. Upload the entire `media-vault-deploy/` folder to your server
+2. Copy `.env.example` to `.env` and configure credentials
+3. In cPanel **Setup Node.js App**:
+   - **Application root:** `/home/user/media-vault-deploy`
+   - **Startup file:** `server.js`
+   - **Node.js version:** >= 18
+4. Ensure write permissions on `media-vault-deploy/data/` and `media-vault-deploy/uploads/`
+
+- **JSON:** Requires write permission on `data/` — no database server needed
+- **Uploads:** Set `MEDIAVAULT_STORAGE_LOCAL_PATH` to an absolute path outside web root
 
 ### Reverse Proxy (nginx)
 

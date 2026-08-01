@@ -9,6 +9,9 @@ packages/dashboard/dist/
 packages/server/dist/
 packages/sdk/dist/
 
+# Deployment output
+media-vault-deploy/
+
 
 # Environment files
 .env

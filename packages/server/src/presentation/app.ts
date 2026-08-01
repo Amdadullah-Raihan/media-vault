@@ -101,7 +101,12 @@ export async function createApp(): Promise<express.Application> {
     logger.info({ port: VITE_PORT }, 'Vite dev server started, proxying dashboard requests');
   } else {
     // Production: serve built static files
-    const distPath = path.resolve(__dirname, '..', '..', '..', 'dashboard', 'dist');
+    // In monorepo dev/build: dashboard lives at ../../dashboard/dist
+    // In flat deploy:     set MEDIAVAULT_DASHBOARD_PATH=./dashboard/dist
+    const distPath =
+      process.env.MEDIAVAULT_DASHBOARD_PATH
+        ? path.resolve(process.env.MEDIAVAULT_DASHBOARD_PATH)
+        : path.resolve(__dirname, '..', '..', '..', 'dashboard', 'dist');
 
     if (fs.existsSync(distPath)) {
       app.use(express.static(distPath));
