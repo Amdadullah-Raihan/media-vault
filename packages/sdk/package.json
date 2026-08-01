@@ -1,6 +1,6 @@
 {
   "name": "@media-vault/sdk",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Official TypeScript SDK for MediaVault – self-hosted media management REST API client for Node.js and browsers",
   "license": "MIT",
   "homepage": "https://github.com/your-org/media-vault/tree/main/packages/sdk#readme",
