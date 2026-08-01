@@ -1,1 +1,1 @@
-export { authenticate, requireProject } from './middleware';
+export { authenticate, optionalAuthenticate, requireProject } from './middleware';

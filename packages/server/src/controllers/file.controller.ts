@@ -57,7 +57,19 @@ export class FileController {
 
   public download = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const { metadata, stream } = await this.service.download(this.paramId(req));
+      const id = this.paramId(req);
+
+      // Gate: private files require authentication
+      const metadata = await this.service.getById(id);
+      if (metadata.visibility === FileVisibility.Private && !req.isAdmin && !req.projectId) {
+        res.status(401).json({
+          success: false,
+          error: { code: 'UNAUTHORIZED', message: 'Authentication required for private files.' },
+        });
+        return;
+      }
+
+      const { stream } = await this.service.download(id);
 
       res.setHeader('Content-Type', metadata.mimeType);
       res.setHeader('Content-Disposition', `attachment; filename="${metadata.originalFilename}"`);
@@ -78,11 +90,20 @@ export class FileController {
 
   public stream = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
+      const id = this.paramId(req);
+
+      // Gate: private files require authentication
+      const metadata = await this.service.getById(id);
+      if (metadata.visibility === FileVisibility.Private && !req.isAdmin && !req.projectId) {
+        res.status(401).json({
+          success: false,
+          error: { code: 'UNAUTHORIZED', message: 'Authentication required for private files.' },
+        });
+        return;
+      }
+
       const range = req.headers.range;
-      const { metadata, stream, start, end, totalSize } = await this.service.stream(
-        this.paramId(req),
-        range,
-      );
+      const { stream, start, end, totalSize } = await this.service.stream(id, range);
 
       const chunkSize = end - start + 1;
 

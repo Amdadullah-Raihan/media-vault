@@ -113,6 +113,69 @@ export async function authenticate(req: Request, res: Response, next: NextFuncti
 }
 
 /**
+ * Middleware that optionally authenticates — populates req.projectId / req.isAdmin
+ * when valid credentials are present, but never rejects. Downstream handlers
+ * can use these fields to gate access (e.g. private vs public files).
+ */
+export async function optionalAuthenticate(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
+  const config = getConfig();
+
+  // Auth disabled – allow all requests through
+  if (!config.auth.enabled) {
+    req.projectId = null;
+    req.isAdmin = false;
+    next();
+    return;
+  }
+
+  // Try session cookie
+  const sessionId = req.cookies[SESSION_COOKIE] as string | undefined;
+  if (sessionId) {
+    const session = await sessionRepo.findById(sessionId);
+    if (session && new Date() <= session.expiresAt) {
+      const newExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
+      sessionRepo.updateExpiry(sessionId, newExpires).catch(() => {
+        /* best-effort */
+      });
+      req.projectId = null;
+      req.isAdmin = true;
+      next();
+      return;
+    }
+    if (session) {
+      await sessionRepo.delete(sessionId).catch(() => {
+        /* best-effort */
+      });
+    }
+    res.clearCookie(SESSION_COOKIE, { path: '/' });
+  }
+
+  // Try API key
+  const apiKey = req.headers[config.auth.apiKeyHeader];
+  if (apiKey && typeof apiKey === 'string') {
+    const keyRecord = await apiKeyRepo.findByKey(apiKey);
+    if (keyRecord) {
+      apiKeyRepo.updateLastUsed(keyRecord.id).catch(() => {
+        /* best-effort */
+      });
+      req.projectId = keyRecord.projectId;
+      req.isAdmin = false;
+      next();
+      return;
+    }
+  }
+
+  // No credentials — still pass through, but unauthenticated
+  req.projectId = null;
+  req.isAdmin = false;
+  next();
+}
+
+/**
  * Middleware that ensures a project context exists. Admins bypass this check.
  */
 export function requireProject(req: Request, res: Response, next: NextFunction): void {

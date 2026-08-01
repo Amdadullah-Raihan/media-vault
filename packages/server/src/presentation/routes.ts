@@ -16,7 +16,7 @@ import {
 } from '../controllers';
 import { SettingsRepository, SessionRepository } from '../repositories';
 import { AuthService } from '../services';
-import { authenticate, requireProject } from '../auth';
+import { authenticate, optionalAuthenticate, requireProject } from '../auth';
 import { validate } from '../validation';
 import {
   createProjectSchema,
@@ -167,14 +167,14 @@ router.get('/files/:id', authenticate, validate(uuidParamSchema, 'params'), file
 
 router.get(
   '/files/:id/download',
-  authenticate,
+  optionalAuthenticate,
   validate(uuidParamSchema, 'params'),
   fileController.download,
 );
 
 router.get(
   '/files/:id/stream',
-  authenticate,
+  optionalAuthenticate,
   validate(uuidParamSchema, 'params'),
   fileController.stream,
 );
