@@ -5,7 +5,6 @@
 import { createApp } from './presentation';
 import { getConfig } from './config';
 import { getLogger } from './utils/logger';
-import { disconnectPrisma } from './utils/prisma';
 
 async function main(): Promise<void> {
   const config = getConfig();
@@ -27,15 +26,8 @@ async function main(): Promise<void> {
   const shutdown = (signal: string): void => {
     logger.info({ signal }, 'Shutting down...');
     server.close(() => {
-      disconnectPrisma()
-        .then(() => {
-          logger.info('Server stopped');
-          process.exit(0);
-        })
-        .catch((err: unknown) => {
-          logger.error({ err }, 'Error disconnecting Prisma');
-          process.exit(1);
-        });
+      logger.info('Server stopped');
+      process.exit(0);
     });
 
     // Force exit after 10s

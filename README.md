@@ -19,14 +19,13 @@ packages/
 │   │   ├── presentation/   # Routes, error handler, Express app
 │   │   ├── controllers/    # Request handlers (no business logic)
 │   │   ├── services/       # Business logic (no Express coupling)
-│   │   ├── repositories/   # Data access (Prisma)
+│   │   ├── repositories/   # Data access (JSON file store)
 │   │   ├── storage/        # Storage driver interface + local driver
 │   │   ├── core/           # Domain types, interfaces, errors
 │   │   ├── config/         # Configuration loader
 │   │   ├── auth/           # API key authentication
 │   │   ├── validation/     # Zod schemas
-│   │   └── utils/          # Shared helpers
-│   └── prisma/             # Database schema & migrations
+│   │   └── utils/          # Shared helpers (json-store, logger, etc.)
 ├── sdk/              # TypeScript SDK (wraps REST API)
 └── cli/              # CLI tool (init, start, doctor, etc.)
 ```
@@ -48,9 +47,6 @@ npm install
 
 # Set up environment
 cp .env.example .env
-
-# Initialize database
-npm run db:migrate --workspace=@media-vault/server
 
 # Start development server
 npm run dev
@@ -253,7 +249,7 @@ import type {
 
 ## Deployment
 
-MediaVault is a single Node.js process backed by SQLite — no external databases or caches required. The monorepo is the deployable unit. After building, the server automatically serves the dashboard from its relative path — no need to move files around.
+MediaVault is a single Node.js process backed by JSON files — no external databases or caches required. The monorepo is the deployable unit. After building, the server automatically serves the dashboard from its relative path — no need to move files around.
 
 ```bash
 # 1. Clone and install
@@ -266,10 +262,7 @@ npm run build
 cp packages/server/.env.example packages/server/.env
 nano packages/server/.env
 
-# 4. Run database migration
-npm run db:migrate --workspace=@media-vault/server
-
-# 5. Start (dev)
+# 4. Start (dev)
 npm run dev
 
 # Or start in production
@@ -283,7 +276,7 @@ media-vault/
 ├── packages/
 │   ├── server/
 │   │   ├── dist/          # Compiled backend
-│   │   ├── data/          # SQLite database
+│   │   ├── data/          # JSON data files (projects, keys, sessions, etc.)
 │   │   ├── uploads/       # File storage
 │   │   └── .env           # Configuration
 │   └── dashboard/
@@ -307,10 +300,7 @@ npm run build
 cp packages/server/.env.example packages/server/.env
 nano packages/server/.env
 
-# 4. Run database migration
-npm run db:migrate --workspace=@media-vault/server
-
-# 5. Start with PM2 (recommended)
+# 4. Start with PM2 (recommended)
 npm install -g pm2
 NODE_ENV=production pm2 start packages/server/dist/index.js --name mediavault
 pm2 save && pm2 startup
@@ -321,7 +311,7 @@ pm2 save && pm2 startup
 - **Node.js version:** >= 18 required
 - **Application root:** Point to the repo root (`media-vault/`)
 - **Startup file:** `packages/server/dist/index.js` — run `npm run build` first
-- **SQLite:** Requires write permission on `packages/server/data/` — no database server needed
+- **JSON:** Requires write permission on `packages/server/data/` — no database server needed
 - **Uploads:** Set `MEDIAVAULT_STORAGE_LOCAL_PATH` to a path outside the web root
 - **No global dist needed:** The server finds the dashboard at `../dashboard/dist/` relative to itself
 
@@ -350,18 +340,18 @@ server {
 
 All settings are configurable via environment variables. See `.env.example` for all options.
 
-| Variable                        | Default                     | Description                         |
-| ------------------------------- | --------------------------- | ----------------------------------- |
-| `MEDIAVAULT_PORT`               | `3000`                      | Server port                         |
-| `MEDIAVAULT_HOST`               | `0.0.0.0`                   | Server host                         |
-| `DATABASE_URL`                  | `file:./data/mediavault.db` | SQLite database path                |
-| `MEDIAVAULT_STORAGE_DRIVER`     | `local`                     | Storage driver (local only for now) |
-| `MEDIAVAULT_STORAGE_LOCAL_PATH` | `./uploads`                 | Local storage directory             |
-| `MEDIAVAULT_MAX_FILE_SIZE`      | `104857600`                 | Max upload size in bytes (100MB)    |
-| `MEDIAVAULT_AUTH_ENABLED`       | `true`                      | Enable/disable authentication       |
-| `ADMIN_USERNAME`                | `admin`                     | Dashboard admin username            |
-| `ADMIN_PASSWORD`                | `admin123456`               | Dashboard admin password            |
-| `MEDIAVAULT_SIGNED_URL_SECRET`  | —                           | Secret for signed URL generation    |
+| Variable                        | Default       | Description                         |
+| ------------------------------- | ------------- | ----------------------------------- |
+| `MEDIAVAULT_PORT`               | `3000`        | Server port                         |
+| `MEDIAVAULT_HOST`               | `0.0.0.0`     | Server host                         |
+| `MEDIAVAULT_DATA_DIR`           | `./data`      | JSON data directory                 |
+| `MEDIAVAULT_STORAGE_DRIVER`     | `local`       | Storage driver (local only for now) |
+| `MEDIAVAULT_STORAGE_LOCAL_PATH` | `./uploads`   | Local storage directory             |
+| `MEDIAVAULT_MAX_FILE_SIZE`      | `104857600`   | Max upload size in bytes (100MB)    |
+| `MEDIAVAULT_AUTH_ENABLED`       | `true`        | Enable/disable authentication       |
+| `ADMIN_USERNAME`                | `admin`       | Dashboard admin username            |
+| `ADMIN_PASSWORD`                | `admin123456` | Dashboard admin password            |
+| `MEDIAVAULT_SIGNED_URL_SECRET`  | —             | Secret for signed URL generation    |
 
 ## Storage Drivers
 

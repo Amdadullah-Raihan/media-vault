@@ -71,10 +71,7 @@ export function loadConfig(): AppConfig {
       host: envString('MEDIAVAULT_HOST', '0.0.0.0'),
     },
     database: {
-      url: envString(
-        'DATABASE_URL',
-        `file:${path.resolve(process.cwd(), 'data', 'mediavault.db')}`,
-      ),
+      url: envString('MEDIAVAULT_DATA_DIR', path.resolve(process.cwd(), 'data')),
     },
     storage: {
       driver: envString('MEDIAVAULT_STORAGE_DRIVER', 'local'),

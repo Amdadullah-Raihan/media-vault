@@ -10,7 +10,8 @@
 
 import { Request, Response, NextFunction } from 'express';
 import { getConfig } from '../config';
-import { getPrisma } from '../utils/prisma';
+import { ApiKeyRepository } from '../repositories/api-key.repository';
+import { SessionRepository } from '../repositories/session.repository';
 import { error } from '../utils/responses';
 
 const SESSION_COOKIE = 'mv_sid';
@@ -30,6 +31,9 @@ declare global {
   }
 }
 
+const sessionRepo = new SessionRepository();
+const apiKeyRepo = new ApiKeyRepository();
+
 /**
  * Middleware that authenticates via session cookie (dashboard) or API key (apps).
  */
@@ -44,8 +48,6 @@ export async function authenticate(req: Request, res: Response, next: NextFuncti
     return;
   }
 
-  const prisma = getPrisma();
-
   // -----------------------------------------------------------------------
   // Path 1: Dashboard session cookie
   // -----------------------------------------------------------------------
@@ -53,18 +55,14 @@ export async function authenticate(req: Request, res: Response, next: NextFuncti
   const sessionId = req.cookies[SESSION_COOKIE] as string | undefined;
 
   if (sessionId) {
-    const session = await prisma.session.findUnique({ where: { id: sessionId } });
+    const session = await sessionRepo.findById(sessionId);
 
     if (session && new Date() <= session.expiresAt) {
       // Touch session (extend expiry)
-      prisma.session
-        .update({
-          where: { id: sessionId },
-          data: { lastActivity: new Date(), expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000) },
-        })
-        .catch(() => {
-          /* best-effort */
-        });
+      const newExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
+      sessionRepo.updateExpiry(sessionId, newExpires).catch(() => {
+        /* best-effort */
+      });
 
       req.projectId = null;
       req.isAdmin = true;
@@ -74,7 +72,7 @@ export async function authenticate(req: Request, res: Response, next: NextFuncti
 
     // Expired or not found — clear cookie
     if (session) {
-      await prisma.session.delete({ where: { id: sessionId } }).catch(() => {
+      await sessionRepo.delete(sessionId).catch(() => {
         /* best-effort */
       });
     }
@@ -97,10 +95,7 @@ export async function authenticate(req: Request, res: Response, next: NextFuncti
     return;
   }
 
-  const keyRecord = await prisma.apiKey.findUnique({
-    where: { key: apiKey },
-    select: { id: true, projectId: true },
-  });
+  const keyRecord = await apiKeyRepo.findByKey(apiKey);
 
   if (!keyRecord) {
     error(res, 401, 'UNAUTHORIZED', 'Invalid API key.');
@@ -108,11 +103,9 @@ export async function authenticate(req: Request, res: Response, next: NextFuncti
   }
 
   // Update last used timestamp (fire-and-forget)
-  prisma.apiKey
-    .update({ where: { id: keyRecord.id }, data: { lastUsedAt: new Date() } })
-    .catch(() => {
-      /* best-effort */
-    });
+  apiKeyRepo.updateLastUsed(keyRecord.id).catch(() => {
+    /* best-effort */
+  });
 
   req.projectId = keyRecord.projectId;
   req.isAdmin = false;

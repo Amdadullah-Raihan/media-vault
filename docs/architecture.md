@@ -35,7 +35,7 @@ HTTP Request
        ▼                    ▼
 ┌──────────────┐   ┌──────────────────┐
 │  Repositories│   │  Storage Drivers │
-│  (Prisma)    │   │  (Interface)     │
+│  (JSON Store)│   │  (Interface)     │
 │              │   │       │          │
 │  - CRUD      │   │  Local │  S3 ... │
 │  - Queries   │   │       │          │
@@ -43,8 +43,9 @@ HTTP Request
        │               │
        ▼               ▼
 ┌──────────────┐   ┌──────────────┐
-│  SQLite DB   │   │  Filesystem  │
-└──────────────┘   └──────────────┘
+│ JSON Files   │   │  Filesystem  │
+│ (data/*.json)│   └──────────────┘
+└──────────────┘
 ```
 
 ## Key Design Decisions
@@ -63,7 +64,7 @@ Projects are the top-level isolation boundary. API keys belong to projects. File
 
 ### 4. Metadata Separate from Files
 
-File metadata lives in SQLite. Files live on the filesystem. This separation allows metadata queries without touching the filesystem.
+File metadata lives in JSON files (`data/*.json`). Files live on the filesystem. This separation allows metadata queries without touching the filesystem.
 
 ### 5. Consistent Error Responses
 

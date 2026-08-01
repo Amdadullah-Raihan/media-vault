@@ -5,7 +5,6 @@
 import { Router } from 'express';
 import multer from 'multer';
 import { getConfig } from '../config';
-import { getPrisma } from '../utils/prisma';
 import {
   ProjectController,
   ApiKeyController,
@@ -30,7 +29,6 @@ import {
 
 const router = Router();
 
-const prisma = getPrisma();
 const projectController = new ProjectController();
 const apiKeyController = new ApiKeyController();
 const folderController = new FolderController();
@@ -41,8 +39,8 @@ const uploadRulesController = new UploadRulesController();
 const config = getConfig();
 
 // Auth setup
-const settingsRepo = new SettingsRepository(prisma);
-const sessionRepo = new SessionRepository(prisma);
+const settingsRepo = new SettingsRepository();
+const sessionRepo = new SessionRepository();
 const authService = new AuthService(
   settingsRepo,
   sessionRepo,
@@ -160,7 +158,6 @@ router.delete(
 // Files
 // =========================================================================
 
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 router.post('/files/upload', authenticate, upload.single('file'), fileController.upload);
 

@@ -2,34 +2,38 @@
 // MediaVault – Settings Repository
 // ---------------------------------------------------------------------------
 
-import { PrismaClient } from '@prisma/client';
+import { getStore } from '../utils/store';
+
+const COLLECTION = 'settings';
+
+interface SettingRow {
+  key: string;
+  value: string;
+}
 
 export class SettingsRepository {
-  constructor(private readonly prisma: PrismaClient) {}
+  private readonly store = getStore();
 
-  async get(key: string): Promise<string | null> {
-    const row = await this.prisma.settings.findUnique({ where: { key } });
+  public async get(key: string): Promise<string | null> {
+    const row = this.store.findOne<SettingRow>(COLLECTION, (s) => s.key === key);
     return row?.value ?? null;
   }
 
-  async set(key: string, value: string): Promise<void> {
-    await this.prisma.settings.upsert({
-      where: { key },
-      update: { value },
-      create: { key, value },
-    });
+  public async set(key: string, value: string): Promise<void> {
+    this.store.upsert<SettingRow>(
+      COLLECTION,
+      (s) => s.key === key,
+      () => ({ key, value }),
+      (s) => ({ ...s, value }),
+    );
   }
 
-  async delete(key: string): Promise<void> {
-    await this.prisma.settings.delete({ where: { key } }).catch(() => {
-      // Ignore if doesn't exist
-    });
+  public async delete(key: string): Promise<void> {
+    this.store.delete<SettingRow>(COLLECTION, (s) => s.key === key);
   }
 
-  async getMany(keys: string[]): Promise<Record<string, string | null>> {
-    const rows = await this.prisma.settings.findMany({
-      where: { key: { in: keys } },
-    });
+  public async getMany(keys: string[]): Promise<Record<string, string | null>> {
+    const rows = this.store.findMany<SettingRow>(COLLECTION, (s) => keys.includes(s.key));
     const result: Record<string, string | null> = {};
     for (const k of keys) {
       result[k] = rows.find((r) => r.key === k)?.value ?? null;

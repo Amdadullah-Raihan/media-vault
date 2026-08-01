@@ -2,38 +2,65 @@
 // MediaVault – Session Repository
 // ---------------------------------------------------------------------------
 
-import { PrismaClient, Session } from '@prisma/client';
+import { v4 as uuidv4 } from 'uuid';
+import { getStore } from '../utils/store';
+
+const COLLECTION = 'sessions';
+
+export interface Session {
+  id: string;
+  adminId: string;
+  createdAt: Date;
+  lastActivity: Date;
+  expiresAt: Date;
+}
 
 export class SessionRepository {
-  constructor(private readonly prisma: PrismaClient) {}
+  private readonly store = getStore();
 
-  async create(adminId: string, expiresAt: Date): Promise<Session> {
-    return this.prisma.session.create({
-      data: { adminId, expiresAt },
-    });
+  public async create(adminId: string, expiresAt: Date): Promise<Session> {
+    const now = new Date();
+    const session: Session = {
+      id: uuidv4(),
+      adminId,
+      createdAt: now,
+      lastActivity: now,
+      expiresAt,
+    };
+    return this.store.insert<Session>(COLLECTION, session);
   }
 
-  async findById(id: string): Promise<Session | null> {
-    return this.prisma.session.findUnique({ where: { id } });
+  public async findById(id: string): Promise<Session | undefined> {
+    return this.store.findOne<Session>(COLLECTION, (s) => s.id === id);
   }
 
-  async touch(id: string): Promise<void> {
-    await this.prisma.session.update({
-      where: { id },
-      data: { lastActivity: new Date() },
-    });
+  public async touch(id: string): Promise<void> {
+    this.store.update<Session>(
+      COLLECTION,
+      (s) => s.id === id,
+      (s) => ({
+        ...s,
+        lastActivity: new Date(),
+      }),
+    );
   }
 
-  async delete(id: string): Promise<void> {
-    await this.prisma.session.delete({ where: { id } }).catch(() => {
-      // Already deleted
-    });
+  public async updateExpiry(id: string, expiresAt: Date): Promise<void> {
+    this.store.update<Session>(
+      COLLECTION,
+      (s) => s.id === id,
+      (s) => ({
+        ...s,
+        expiresAt,
+      }),
+    );
   }
 
-  async deleteExpired(): Promise<number> {
-    const result = await this.prisma.session.deleteMany({
-      where: { expiresAt: { lt: new Date() } },
-    });
-    return result.count;
+  public async delete(id: string): Promise<void> {
+    this.store.delete<Session>(COLLECTION, (s) => s.id === id);
+  }
+
+  public async deleteExpired(): Promise<number> {
+    return this.store.deleteMany(COLLECTION, (s: Session) => new Date(s.expiresAt) < new Date());
   }
 }

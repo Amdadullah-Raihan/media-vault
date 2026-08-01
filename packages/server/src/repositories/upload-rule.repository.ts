@@ -1,5 +1,11 @@
-import { PrismaClient } from '@prisma/client';
-import { getPrisma } from '../utils/prisma';
+// ---------------------------------------------------------------------------
+// MediaVault – Upload Rule Repository
+// ---------------------------------------------------------------------------
+
+import { v4 as uuidv4 } from 'uuid';
+import { getStore } from '../utils/store';
+
+const COLLECTION = 'uploadRules';
 
 export interface UploadRuleRow {
   id: string;
@@ -10,78 +16,92 @@ export interface UploadRuleRow {
 }
 
 export class UploadRuleRepository {
-  private readonly prisma: PrismaClient;
+  private readonly store = getStore();
 
-  constructor() {
-    this.prisma = getPrisma();
+  public async findAll(): Promise<UploadRuleRow[]> {
+    return this.store
+      .all<UploadRuleRow>(COLLECTION)
+      .sort(
+        (a, b) =>
+          a.category.localeCompare(b.category) ||
+          (a.extension ?? '').localeCompare(b.extension ?? ''),
+      );
   }
 
-  async findAll(): Promise<UploadRuleRow[]> {
-    return this.prisma.uploadRule.findMany({
-      orderBy: [{ category: 'asc' }, { extension: 'asc' }],
-    });
+  public async findByCategory(category: string): Promise<UploadRuleRow[]> {
+    return this.store
+      .findMany<UploadRuleRow>(COLLECTION, (r) => r.category === category)
+      .sort((a, b) => (a.extension ?? '').localeCompare(b.extension ?? ''));
   }
 
-  async findByCategory(category: string): Promise<UploadRuleRow[]> {
-    return this.prisma.uploadRule.findMany({ where: { category }, orderBy: { extension: 'asc' } });
+  public async findCategoryRule(category: string): Promise<UploadRuleRow | null> {
+    return (
+      this.store.findOne<UploadRuleRow>(
+        COLLECTION,
+        (r) => r.category === category && r.extension === null,
+      ) ?? null
+    );
   }
 
-  async findCategoryRule(category: string): Promise<UploadRuleRow | null> {
-    return this.prisma.uploadRule.findFirst({
-      where: { category, extension: null },
-    });
+  public async findExtensionRule(
+    category: string,
+    extension: string,
+  ): Promise<UploadRuleRow | null> {
+    return (
+      this.store.findOne<UploadRuleRow>(
+        COLLECTION,
+        (r) => r.category === category && r.extension === extension,
+      ) ?? null
+    );
   }
 
-  async findExtensionRule(category: string, extension: string): Promise<UploadRuleRow | null> {
-    return this.prisma.uploadRule.findFirst({
-      where: { category, extension },
-    });
+  public async count(): Promise<number> {
+    return this.store.count(COLLECTION);
   }
 
-  async count(): Promise<number> {
-    return this.prisma.uploadRule.count();
-  }
-
-  async upsert(
+  public async upsert(
     category: string,
     extension: string | null,
     data: { enabled: boolean; maxSize: number },
   ): Promise<UploadRuleRow> {
-    const existing = await this.prisma.uploadRule.findFirst({
-      where: { category, extension },
-    });
-
-    if (existing) {
-      return this.prisma.uploadRule.update({
-        where: { id: existing.id },
-        data: { enabled: data.enabled, maxSize: data.maxSize },
-      });
-    }
-
-    return this.prisma.uploadRule.create({
-      data: { category, extension, enabled: data.enabled, maxSize: data.maxSize },
-    });
+    return this.store.upsert<UploadRuleRow>(
+      COLLECTION,
+      (r) => r.category === category && r.extension === extension,
+      () => ({
+        id: uuidv4(),
+        category,
+        extension,
+        enabled: data.enabled,
+        maxSize: data.maxSize,
+      }),
+      (r) => ({ ...r, enabled: data.enabled, maxSize: data.maxSize }),
+    );
   }
 
-  async delete(category: string, extension: string | null): Promise<void> {
-    const existing = await this.prisma.uploadRule.findFirst({
-      where: { category, extension },
-    });
-    if (existing) {
-      await this.prisma.uploadRule.delete({ where: { id: existing.id } });
-    }
+  public async delete(category: string, extension: string | null): Promise<void> {
+    this.store.delete<UploadRuleRow>(
+      COLLECTION,
+      (r) => r.category === category && r.extension === extension,
+    );
   }
 
-  async createMany(
+  public async createMany(
     rows: { category: string; extension: string | null; enabled: boolean; maxSize: number }[],
   ): Promise<void> {
+    const existing = this.store.all<UploadRuleRow>(COLLECTION);
+    const newRows: UploadRuleRow[] = [];
+
     for (const row of rows) {
-      const exists = await this.prisma.uploadRule.findFirst({
-        where: { category: row.category, extension: row.extension },
-      });
+      const exists = existing.some(
+        (r) => r.category === row.category && r.extension === row.extension,
+      );
       if (!exists) {
-        await this.prisma.uploadRule.create({ data: row });
+        newRows.push({ id: uuidv4(), ...row });
       }
+    }
+
+    if (newRows.length > 0) {
+      this.store.insertMany(COLLECTION, newRows);
     }
   }
 }

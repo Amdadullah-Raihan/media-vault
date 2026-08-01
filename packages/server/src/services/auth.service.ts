@@ -88,13 +88,7 @@ export class AuthService {
 
     const newExpires = new Date(Date.now() + SESSION_DURATION_MS);
     await this.sessions.touch(sessionId);
-
-    const { getPrisma } = await import('../utils/prisma');
-    const prisma = getPrisma();
-    await prisma.session.update({
-      where: { id: sessionId },
-      data: { expiresAt: newExpires },
-    });
+    await this.sessions.updateExpiry(sessionId, newExpires);
 
     return { username: await this.getUsername() };
   }
