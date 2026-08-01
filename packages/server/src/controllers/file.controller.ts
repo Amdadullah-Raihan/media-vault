@@ -74,6 +74,7 @@ export class FileController {
       res.setHeader('Content-Type', metadata.mimeType);
       res.setHeader('Content-Disposition', `attachment; filename="${metadata.originalFilename}"`);
       res.setHeader('Content-Length', metadata.size);
+      res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
 
       stream.pipe(res);
       stream.on('error', (err) => {
@@ -121,6 +122,7 @@ export class FileController {
 
       res.setHeader('Content-Type', metadata.mimeType);
       res.setHeader('Content-Disposition', `inline; filename="${metadata.originalFilename}"`);
+      res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
 
       stream.pipe(res);
       stream.on('error', (err) => {
