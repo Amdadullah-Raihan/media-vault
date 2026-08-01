@@ -10,6 +10,7 @@
     "dev": "npm run dev --workspace=@media-vault/server",
     "build": "npm run build --workspace=@media-vault/dashboard && npm run build --workspace=@media-vault/server",
     "deploy": "node scripts/deploy.js",
+    "publish": "npm publish --workspace=@media-vault/sdk",
     "lint": "eslint packages/*/src --ext .ts",
     "typecheck": "tsc --build",
     "clean": "rimraf packages/*/dist packages/*/node_modules node_modules",
