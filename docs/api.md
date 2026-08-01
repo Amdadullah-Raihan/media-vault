@@ -179,6 +179,9 @@ GET /files/:id/download
 
 Returns the file with `Content-Disposition: attachment`.
 
+- **Public files**: accessible without authentication
+- **Private files**: require a valid session cookie or `X-Api-Key` header
+
 ### Stream File
 
 ```
@@ -186,6 +189,9 @@ GET /files/:id/stream
 ```
 
 Returns the file with `Content-Disposition: inline`. Supports `Range` headers for media streaming.
+
+- **Public files**: accessible without authentication (use directly in `<img>`, `<video>`, `<audio>` tags)
+- **Private files**: require a valid session cookie or `X-Api-Key` header
 
 ### Update File Metadata
 
@@ -207,6 +213,75 @@ PATCH /files/:id
 ```
 DELETE /files/:id
 ```
+
+---
+
+## File Visibility
+
+Every file has a `visibility` property: `private` (default) or `public`.
+
+### Public Files
+
+Public files can be accessed **without authentication**. Use them for images, videos, and audio you want to embed directly in web pages, markdown, or share via link.
+
+**Set a file to public:**
+
+```json
+PATCH /files/:id
+{ "visibility": "public" }
+```
+
+**Using a public image:**
+
+```html
+<!-- Direct embed — no auth needed -->
+<img src="https://media-vault.amdad.me/api/v1/files/{file-id}/stream" />
+```
+
+```markdown
+<!-- In markdown / README -->
+
+![My Image](https://media-vault.amdad.me/api/v1/files/{file-id}/stream)
+```
+
+### Private Files
+
+Private files require authentication. Use the `X-Api-Key` header (applications) or a valid session cookie (dashboard).
+
+**Using a private image programmatically:**
+
+```typescript
+// With the MediaVault SDK
+const client = new MediaVaultClient({
+  baseUrl: 'https://media-vault.amdad.me',
+  apiKey: 'mv_your_api_key',
+});
+
+// Get the stream URL (requires API key in requests)
+const url = client.getStreamUrl('file-id');
+
+// Use a signed URL for temporary public access (1 hour)
+const { url: signedUrl } = await client.getSignedUrl('file-id', { expiresInSeconds: 3600 });
+```
+
+```html
+<!-- Direct HTTP — must include API key header -->
+<!-- Cannot be used in plain <img> tags without a signed URL -->
+```
+
+**Set a file back to private:**
+
+```json
+PATCH /files/:id
+{ "visibility": "private" }
+```
+
+### Quick Reference
+
+| Visibility | Auth Required |   Use in `<img>`    | Use with SDK |
+| ---------- | :-----------: | :-----------------: | :----------: |
+| `public`   |      No       |         ✅          |      ✅      |
+| `private`  |      Yes      | ❌ (use signed URL) |      ✅      |
 
 ---
 
