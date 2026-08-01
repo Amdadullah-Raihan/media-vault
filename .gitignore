@@ -42,11 +42,15 @@ coverage/
 # Turbo (monorepo)
 .turbo/
 
-# Prisma
-prisma/*.db
-prisma/*.db-journal
-
 # Temp files
 *.tmp
 *.temp
 .tmp/
+
+# Archives
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+*.rar
+*.7z
