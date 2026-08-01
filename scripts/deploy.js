@@ -104,6 +104,9 @@ const launcher = `// MediaVault – Self-contained launcher for shared hosting
 
 const path = require('node:path');
 
+// Load .env from the deploy root (Passenger cwd may differ)
+require('dotenv').config({ path: path.join(__dirname, '.env') });
+
 // Tell the server where the dashboard lives in the flat deploy layout
 process.env.MEDIAVAULT_DASHBOARD_PATH =
   process.env.MEDIAVAULT_DASHBOARD_PATH ||
