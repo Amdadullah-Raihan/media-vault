@@ -21,6 +21,7 @@
     "exactOptionalPropertyTypes": false,
     "noImplicitOverride": true,
     "isolatedModules": true,
+    "ignoreDeprecations": "6.0",
     "outDir": "dist",
     "rootDir": "src"
   },
