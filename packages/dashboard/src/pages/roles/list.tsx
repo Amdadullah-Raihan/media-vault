@@ -4,16 +4,25 @@ import {
   useDeleteRoleMutation,
   useDuplicateRoleMutation,
 } from '@/services/roles.service';
-import { Button, Badge, EmptyState, PageSpinner } from '@/components/ui';
+import { Button, Badge, EmptyState, PageSpinner, ForbiddenState } from '@/components/ui';
+import { usePermissions } from '@/hooks';
 import { type Role } from '@/types';
 import { ROUTES } from '@/constants';
 import { Shield, Plus, Trash2, Copy } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export default function RolesListPage() {
-  const { data, isLoading, isError } = useGetRolesQuery();
+  const { hasPermission, isLoading: permissionsLoading } = usePermissions();
+  const canView = hasPermission('users.view');
+  const canCreate = hasPermission('users.create');
+  const canDelete = hasPermission('users.delete');
+
+  const { data, isLoading, isError } = useGetRolesQuery(undefined, { skip: !canView });
   const [deleteRole] = useDeleteRoleMutation();
   const [duplicateRole] = useDuplicateRoleMutation();
+
+  if (permissionsLoading) return <PageSpinner />;
+  if (!canView) return <ForbiddenState />;
 
   if (isLoading) return <PageSpinner />;
 
@@ -44,12 +53,14 @@ export default function RolesListPage() {
           <h1 className="text-2xl font-bold tracking-tight">Roles</h1>
           <p className="text-muted-foreground">Manage roles and their permissions.</p>
         </div>
-        <Link to={ROUTES.ROLE_CREATE}>
-          <Button>
-            <Plus className="mr-2 h-4 w-4" />
-            Create Role
-          </Button>
-        </Link>
+        {canCreate && (
+          <Link to={ROUTES.ROLE_CREATE}>
+            <Button>
+              <Plus className="mr-2 h-4 w-4" />
+              Create Role
+            </Button>
+          </Link>
+        )}
       </div>
 
       {isError && (
@@ -87,24 +98,28 @@ export default function RolesListPage() {
               <div className="mt-3 flex gap-1">
                 {!role.isBuiltIn && (
                   <>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => {
-                        void handleDuplicate(role);
-                      }}
-                    >
-                      <Copy className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => {
-                        void handleDelete(role);
-                      }}
-                    >
-                      <Trash2 className="h-4 w-4 text-destructive" />
-                    </Button>
+                    {canCreate && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          void handleDuplicate(role);
+                        }}
+                      >
+                        <Copy className="h-4 w-4" />
+                      </Button>
+                    )}
+                    {canDelete && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          void handleDelete(role);
+                        }}
+                      >
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    )}
                   </>
                 )}
               </div>

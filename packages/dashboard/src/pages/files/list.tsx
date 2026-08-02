@@ -5,9 +5,17 @@ import { PageHeader } from '@/components/shared';
 import { SearchInput } from '@/components/shared';
 import { Pagination } from '@/components/shared';
 import { ConfirmDialog } from '@/components/shared';
-import { Button, Badge, PageSkeleton, ErrorState, EmptyState } from '@/components/ui';
+import {
+  Button,
+  Badge,
+  PageSkeleton,
+  ErrorState,
+  EmptyState,
+  ForbiddenState,
+  PageSpinner,
+} from '@/components/ui';
 import { DropdownMenu, DropdownItem, DropdownSeparator } from '@/components/ui';
-import { useConfirm } from '@/hooks';
+import { useConfirm, usePermissions } from '@/hooks';
 import { useAppSelector, useAppDispatch } from '@/redux/store';
 import { setViewMode } from '@/redux/slices/ui.slice';
 import { formatFileSize, formatRelativeTime, getMimeCategory } from '@/utils';
@@ -76,12 +84,22 @@ export default function FilesPage() {
   const navigate = useNavigate();
   const viewMode = useAppSelector((s) => s.ui.viewMode);
   const dispatch = useAppDispatch();
+  const { hasPermission, isLoading: permissionsLoading } = usePermissions();
+  const canView = hasPermission('files.view');
+  const canUpload = hasPermission('files.upload');
+
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
-  const { data, isLoading, isError, refetch } = useGetFilesQuery({ page, limit: 24, search });
+  const { data, isLoading, isError, refetch } = useGetFilesQuery(
+    { page, limit: 24, search },
+    { skip: !canView },
+  );
   const [deleteFile, { isLoading: deleting }] = useDeleteFileMutation();
   const { confirm, confirmState, handleConfirm, handleClose } = useConfirm();
   const [selectedFile, setSelectedFile] = useState<FileMetadata | null>(null);
+
+  if (permissionsLoading) return <PageSpinner />;
+  if (!canView) return <ForbiddenState />;
 
   const files = data?.data.data ?? [];
   const totalPages = data?.data.totalPages ?? 1;
@@ -140,10 +158,12 @@ export default function FilesPage() {
                 <List className="h-4 w-4" />
               </Button>
             </div>
-            <Button onClick={() => navigate('/upload')}>
-              <Upload className="h-4 w-4" />
-              Upload
-            </Button>
+            {canUpload && (
+              <Button onClick={() => navigate('/upload')}>
+                <Upload className="h-4 w-4" />
+                Upload
+              </Button>
+            )}
           </>
         }
       />

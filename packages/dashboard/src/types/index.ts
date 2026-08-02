@@ -29,6 +29,14 @@ export interface AuthSession {
   id: string;
   username: string;
   createdAt: string;
+  user?: {
+    id: string;
+    username: string;
+    displayName: string;
+    roleId: string;
+    permissions: string[];
+    assignedProjectIds?: string[];
+  };
 }
 
 export interface ChangePasswordRequest {
@@ -176,7 +184,7 @@ export interface ApiError {
   error: {
     code: string;
     message: string;
-    details?: Array<{ path: string; message: string }>;
+    details?: { path: string; message: string }[];
   };
 }
 
@@ -218,12 +226,6 @@ export interface AuthUser {
   displayName: string;
   roleId: string;
   permissions: string[];
-}
-
-export interface AuthSession {
-  id: string;
-  user: AuthUser;
-  createdAt: string;
 }
 
 // ---------------------------------------------------------------------------

@@ -7,8 +7,16 @@ import {
 import { useGetProjectsQuery } from '@/services/projects.service';
 import { PageHeader } from '@/components/shared';
 import { ConfirmDialog } from '@/components/shared';
-import { Button, Select, PageSkeleton, ErrorState, EmptyState } from '@/components/ui';
-import { useConfirm } from '@/hooks';
+import {
+  Button,
+  Select,
+  PageSkeleton,
+  ErrorState,
+  EmptyState,
+  ForbiddenState,
+  PageSpinner,
+} from '@/components/ui';
+import { useConfirm, usePermissions } from '@/hooks';
 import { formatDate, formatRelativeTime } from '@/utils';
 import { Key, Plus, Copy, Trash2, EyeOff } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -17,21 +25,31 @@ import type { SelectOption } from '@/components/ui';
 
 export default function ApiKeysPage() {
   const { confirm, confirmState, handleConfirm, handleClose } = useConfirm();
+  const { hasPermission, isLoading: permissionsLoading } = usePermissions();
+  const canView = hasPermission('apikeys.view');
+  const canCreate = hasPermission('apikeys.create');
+  const canDelete = hasPermission('apikeys.delete');
+
   const [selectedProject, setSelectedProject] = useState('');
   const [newKeyValue, setNewKeyValue] = useState<string | null>(null);
 
-  const { data: projectsData, isLoading: projectsLoading } = useGetProjectsQuery();
+  const { data: projectsData, isLoading: projectsLoading } = useGetProjectsQuery(undefined, {
+    skip: !canView,
+  });
   const {
     data: keysData,
     isLoading: keysLoading,
     isError,
     refetch,
-  } = useGetApiKeysQuery(selectedProject || undefined);
+  } = useGetApiKeysQuery(selectedProject || undefined, { skip: !canView });
   const [createApiKey, { isLoading: creatingKey }] = useCreateApiKeyMutation();
   const [revokeApiKey] = useRevokeApiKeyMutation();
 
   const projectOptions: SelectOption[] =
     projectsData?.data.data.map((p) => ({ value: p.id, label: p.name })) ?? [];
+
+  if (permissionsLoading) return <PageSpinner />;
+  if (!canView) return <ForbiddenState />;
 
   const isLoading = projectsLoading || keysLoading;
 
@@ -81,10 +99,12 @@ export default function ApiKeysPage() {
         title="API Keys"
         description="Manage API keys for application authentication."
         actions={
-          <Button onClick={handleGenerateKey} loading={creatingKey} disabled={!selectedProject}>
-            <Plus className="h-4 w-4" />
-            Generate Key
-          </Button>
+          canCreate ? (
+            <Button onClick={handleGenerateKey} loading={creatingKey} disabled={!selectedProject}>
+              <Plus className="h-4 w-4" />
+              Generate Key
+            </Button>
+          ) : undefined
         }
       />
 
@@ -154,15 +174,17 @@ export default function ApiKeysPage() {
                     {key.lastUsedAt && <span>Last used {formatRelativeTime(key.lastUsedAt)}</span>}
                   </div>
                 </div>
-                <Button
-                  variant="ghost"
-                  size="icon-sm"
-                  onClick={() => handleRevoke(key)}
-                  className="text-destructive hover:text-destructive shrink-0"
-                  aria-label="Revoke API key"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
+                {canDelete && (
+                  <Button
+                    variant="ghost"
+                    size="icon-sm"
+                    onClick={() => handleRevoke(key)}
+                    className="text-destructive hover:text-destructive shrink-0"
+                    aria-label="Revoke API key"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                )}
               </div>
             ))}
           </div>

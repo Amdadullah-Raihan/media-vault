@@ -3,9 +3,9 @@ import { useGetSessionQuery } from '@/services/auth.service';
 import { PageSpinner } from '@/components/ui';
 
 export function AuthGuard() {
-  const { data, isLoading, isError } = useGetSessionQuery();
+  const { data, isLoading, isFetching, isError } = useGetSessionQuery();
 
-  if (isLoading) {
+  if (isLoading || isFetching) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <PageSpinner />
@@ -21,9 +21,9 @@ export function AuthGuard() {
 }
 
 export function GuestGuard() {
-  const { data, isLoading } = useGetSessionQuery();
+  const { data, isLoading, isFetching, isError } = useGetSessionQuery();
 
-  if (isLoading) {
+  if (isLoading || isFetching) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <PageSpinner />
@@ -31,7 +31,9 @@ export function GuestGuard() {
     );
   }
 
-  if (data?.success) {
+  // Only redirect if the session query succeeded with a valid session.
+  // If errored or data.success is false, let the user reach the login page.
+  if (!isError && data?.success) {
     return <Navigate to="/" replace />;
   }
 

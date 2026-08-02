@@ -6,7 +6,8 @@ import {
   useRestoreUserMutation,
   useUnlockUserMutation,
 } from '@/services/users.service';
-import { Button, Badge, EmptyState, PageSpinner } from '@/components/ui';
+import { Button, Badge, EmptyState, PageSpinner, ForbiddenState } from '@/components/ui';
+import { usePermissions } from '@/hooks';
 import { UserStatus, type UserProfile } from '@/types';
 import { ROUTES } from '@/constants';
 import { Users, Plus, Shield, Ban, Trash2, Lock } from 'lucide-react';
@@ -26,11 +27,20 @@ const STATUS_BADGES: Record<
 };
 
 export default function UsersListPage() {
-  const { data, isLoading, isError } = useGetUsersQuery();
+  const { hasPermission, isLoading: permissionsLoading } = usePermissions();
+  const canView = hasPermission('users.view');
+  const canCreate = hasPermission('users.create');
+  const canEdit = hasPermission('users.edit');
+  const canDelete = hasPermission('users.delete');
+
+  const { data, isLoading, isError } = useGetUsersQuery(undefined, { skip: !canView });
   const [deleteUser] = useDeleteUserMutation();
   const [suspendUser] = useSuspendUserMutation();
   const [restoreUser] = useRestoreUserMutation();
   const [unlockUser] = useUnlockUserMutation();
+
+  if (permissionsLoading) return <PageSpinner />;
+  if (!canView) return <ForbiddenState />;
 
   if (isLoading) return <PageSpinner />;
 
@@ -79,12 +89,14 @@ export default function UsersListPage() {
           <h1 className="text-2xl font-bold tracking-tight">Users</h1>
           <p className="text-muted-foreground">Manage administrator accounts and permissions.</p>
         </div>
-        <Link to={ROUTES.USER_CREATE}>
-          <Button>
-            <Plus className="mr-2 h-4 w-4" />
-            Add User
-          </Button>
-        </Link>
+        {canCreate && (
+          <Link to={ROUTES.USER_CREATE}>
+            <Button>
+              <Plus className="mr-2 h-4 w-4" />
+              Add User
+            </Button>
+          </Link>
+        )}
       </div>
 
       {isError && (
@@ -102,14 +114,16 @@ export default function UsersListPage() {
             title="No users yet"
             description="Create the first user to get started."
           />
-          <div className="flex justify-center">
-            <Link to={ROUTES.USER_CREATE}>
-              <Button>
-                <Plus className="mr-2 h-4 w-4" />
-                Add User
-              </Button>
-            </Link>
-          </div>
+          {canCreate && (
+            <div className="flex justify-center">
+              <Link to={ROUTES.USER_CREATE}>
+                <Button>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add User
+                </Button>
+              </Link>
+            </div>
+          )}
         </div>
       )}
 
@@ -160,7 +174,7 @@ export default function UsersListPage() {
                     </td>
                     <td className="px-4 py-3 text-right">
                       <div className="flex items-center justify-end gap-1">
-                        {user.status === UserStatus.Active && (
+                        {canEdit && user.status === UserStatus.Active && (
                           <Button
                             variant="ghost"
                             size="sm"
@@ -171,7 +185,7 @@ export default function UsersListPage() {
                             <Ban className="h-4 w-4" />
                           </Button>
                         )}
-                        {user.status === UserStatus.Suspended && (
+                        {canEdit && user.status === UserStatus.Suspended && (
                           <Button
                             variant="ghost"
                             size="sm"
@@ -182,7 +196,7 @@ export default function UsersListPage() {
                             <Shield className="h-4 w-4" />
                           </Button>
                         )}
-                        {user.status === UserStatus.Locked && (
+                        {canEdit && user.status === UserStatus.Locked && (
                           <Button
                             variant="ghost"
                             size="sm"
@@ -193,18 +207,19 @@ export default function UsersListPage() {
                             <Lock className="h-4 w-4" />
                           </Button>
                         )}
-                        {(user.status === UserStatus.Disabled ||
-                          user.status === UserStatus.Suspended) && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => {
-                              void handleDelete(user);
-                            }}
-                          >
-                            <Trash2 className="h-4 w-4 text-destructive" />
-                          </Button>
-                        )}
+                        {canDelete &&
+                          (user.status === UserStatus.Disabled ||
+                            user.status === UserStatus.Suspended) && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => {
+                                void handleDelete(user);
+                              }}
+                            >
+                              <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
+                          )}
                       </div>
                     </td>
                   </tr>

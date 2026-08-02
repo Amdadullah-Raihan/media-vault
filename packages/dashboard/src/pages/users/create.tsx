@@ -4,7 +4,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useCreateUserMutation } from '@/services/users.service';
 import { useGetRolesQuery } from '@/services/roles.service';
-import { Button, Input, Select } from '@/components/ui';
+import { Button, Input, Select, ForbiddenState, PageSpinner } from '@/components/ui';
+import { usePermissions } from '@/hooks';
 import { ROUTES } from '@/constants';
 import { ArrowLeft } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -23,8 +24,14 @@ type CreateUserFormData = z.infer<typeof createUserSchema>;
 
 export default function UserCreatePage() {
   const navigate = useNavigate();
+  const { hasPermission, isLoading: permissionsLoading } = usePermissions();
+  const canCreate = hasPermission('users.create');
+
   const [createUser, { isLoading }] = useCreateUserMutation();
-  const { data: rolesData } = useGetRolesQuery();
+  const { data: rolesData } = useGetRolesQuery(undefined, { skip: !canCreate });
+
+  if (permissionsLoading) return <PageSpinner />;
+  if (!canCreate) return <ForbiddenState />;
 
   const {
     register,

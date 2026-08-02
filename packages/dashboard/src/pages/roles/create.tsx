@@ -8,7 +8,8 @@ import toast from 'react-hot-toast';
 import { useCreateRoleMutation } from '@/services/roles.service';
 import { useGetPermissionsQuery } from '@/services/permissions.service';
 import { PageHeader } from '@/components/shared';
-import { Badge, Button, Input, PageSpinner, Textarea } from '@/components/ui';
+import { Badge, Button, Input, PageSpinner, Textarea, ForbiddenState } from '@/components/ui';
+import { usePermissions } from '@/hooks';
 import { ROUTES } from '@/constants';
 import type { ApiError } from '@/types';
 
@@ -35,9 +36,15 @@ function formatPermissionLabel(permission: string): string {
 
 export default function RoleCreatePage() {
   const navigate = useNavigate();
+  const { hasPermission, isLoading: permissionsLoading } = usePermissions();
+  const canCreate = hasPermission('users.create');
+
   const [createRole, { isLoading: isCreating }] = useCreateRoleMutation();
-  const { data, isLoading, isError } = useGetPermissionsQuery();
+  const { data, isLoading, isError } = useGetPermissionsQuery(undefined, { skip: !canCreate });
   const [selectedPermissions, setSelectedPermissions] = useState<string[]>([]);
+
+  if (permissionsLoading) return <PageSpinner />;
+  if (!canCreate) return <ForbiddenState />;
 
   const {
     register,
@@ -81,7 +88,7 @@ export default function RoleCreatePage() {
       navigate(`/roles/${result.data.id}`);
     } catch (err: unknown) {
       const apiErr = err as { data?: ApiError };
-      toast.error(apiErr.data?.error?.message ?? 'Failed to create role');
+      toast.error(apiErr.data?.error.message ?? 'Failed to create role');
     }
   };
 
@@ -144,7 +151,9 @@ export default function RoleCreatePage() {
                 type="button"
                 variant="outline"
                 size="sm"
-                onClick={() => setSelectedPermissions([])}
+                onClick={() => {
+                  setSelectedPermissions([]);
+                }}
               >
                 Clear
               </Button>
@@ -170,7 +179,9 @@ export default function RoleCreatePage() {
                         type="button"
                         variant={allSelected ? 'secondary' : 'outline'}
                         size="sm"
-                        onClick={() => toggleGroup(group.permissions)}
+                        onClick={() => {
+                          toggleGroup(group.permissions);
+                        }}
                       >
                         {allSelected ? (
                           <Check className="h-4 w-4" />
@@ -189,7 +200,9 @@ export default function RoleCreatePage() {
                           <button
                             key={permission}
                             type="button"
-                            onClick={() => togglePermission(permission)}
+                            onClick={() => {
+                              togglePermission(permission);
+                            }}
                             className={`flex items-center justify-between rounded-md border px-3 py-2 text-left text-sm transition-colors ${
                               selected
                                 ? 'border-primary bg-primary/10 text-foreground'

@@ -11,10 +11,19 @@ import {
 } from '@/services/upload-rules.service';
 import type { CategoryWithExtensions, ExtensionRule } from '@/services/upload-rules.service';
 import { PageHeader } from '@/components/shared';
-import { Button, Input, PageSkeleton, ErrorState, Badge } from '@/components/ui';
+import {
+  Button,
+  Input,
+  PageSkeleton,
+  ErrorState,
+  Badge,
+  ForbiddenState,
+  PageSpinner,
+} from '@/components/ui';
 import { useAppSelector, useAppDispatch } from '@/redux/store';
 import { setTheme } from '@/redux/slices/ui.slice';
 import { Select } from '@/components/ui';
+import { usePermissions } from '@/hooks';
 import toast from 'react-hot-toast';
 import {
   Settings,
@@ -59,9 +68,19 @@ function unitToBytes(value: number, unit: (typeof SIZE_UNITS)[number]): number {
 export default function SettingsPage() {
   const theme = useAppSelector((s) => s.ui.theme);
   const dispatch = useAppDispatch();
+  const { hasPermission, isLoading: permissionsLoading } = usePermissions();
+  const canView = hasPermission('settings.view');
 
-  const { data: settingsData, isLoading, isError, refetch } = useGetSettingsQuery();
+  const {
+    data: settingsData,
+    isLoading,
+    isError,
+    refetch,
+  } = useGetSettingsQuery(undefined, { skip: !canView });
   const [changePassword, { isLoading: changing }] = useChangePasswordMutation();
+
+  if (permissionsLoading) return <PageSpinner />;
+  if (!canView) return <ForbiddenState />;
 
   const {
     register,
@@ -82,7 +101,7 @@ export default function SettingsPage() {
       reset();
     } catch (err: unknown) {
       const apiErr = err as { data?: ApiError };
-      toast.error(apiErr.data?.error?.message ?? 'Failed to change password');
+      toast.error(apiErr.data?.error.message ?? 'Failed to change password');
     }
   };
 

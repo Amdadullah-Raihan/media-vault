@@ -3,7 +3,16 @@ import { ArrowLeft, Shield } from 'lucide-react';
 import { useGetRoleQuery } from '@/services/roles.service';
 import { useGetPermissionsQuery } from '@/services/permissions.service';
 import { PageHeader } from '@/components/shared';
-import { Badge, Button, PageSkeleton, ErrorState, EmptyState } from '@/components/ui';
+import {
+  Badge,
+  Button,
+  PageSkeleton,
+  ErrorState,
+  EmptyState,
+  ForbiddenState,
+  PageSpinner,
+} from '@/components/ui';
+import { usePermissions } from '@/hooks';
 import { ROUTES } from '@/constants';
 import { formatDate } from '@/utils';
 
@@ -18,8 +27,19 @@ function formatPermissionLabel(permission: string): string {
 export default function RoleDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { data: roleData, isLoading, isError, refetch } = useGetRoleQuery(id ?? '');
-  const { data: permissionsData } = useGetPermissionsQuery();
+  const { hasPermission, isLoading: permissionsLoading } = usePermissions();
+  const canView = hasPermission('users.view');
+
+  const {
+    data: roleData,
+    isLoading,
+    isError,
+    refetch,
+  } = useGetRoleQuery(id ?? '', { skip: !canView || !id });
+  const { data: permissionsData } = useGetPermissionsQuery(undefined, { skip: !canView });
+
+  if (permissionsLoading) return <PageSpinner />;
+  if (!canView) return <ForbiddenState />;
 
   if (isLoading) return <PageSkeleton />;
   if (isError || !roleData?.data) return <ErrorState onRetry={refetch} />;
