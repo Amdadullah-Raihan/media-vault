@@ -19,6 +19,8 @@ const LogsPage = lazy(() => import('@/pages/logs'));
 const UsersListPage = lazy(() => import('@/pages/users/list'));
 const UserCreatePage = lazy(() => import('@/pages/users/create'));
 const RolesListPage = lazy(() => import('@/pages/roles/list'));
+const RoleCreatePage = lazy(() => import('@/pages/roles/create'));
+const RoleDetailPage = lazy(() => import('@/pages/roles/detail'));
 const NotFoundPage = lazy(() => import('@/pages/not-found'));
 
 function LazyPage({ children }: { children: React.ReactNode }) {
@@ -146,6 +148,22 @@ export const router = createBrowserRouter([
             element: (
               <LazyPage>
                 <RolesListPage />
+              </LazyPage>
+            ),
+          },
+          {
+            path: 'roles/new',
+            element: (
+              <LazyPage>
+                <RoleCreatePage />
+              </LazyPage>
+            ),
+          },
+          {
+            path: 'roles/:id',
+            element: (
+              <LazyPage>
+                <RoleDetailPage />
               </LazyPage>
             ),
           },

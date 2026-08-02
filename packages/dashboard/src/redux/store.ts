@@ -9,6 +9,7 @@ import { settingsApi } from '@/services/settings.service';
 import { uploadRulesApi } from '@/services/upload-rules.service';
 import { usersApi } from '@/services/users.service';
 import { rolesApi } from '@/services/roles.service';
+import { permissionsApi } from '@/services/permissions.service';
 import uiReducer from '@/redux/slices/ui.slice';
 
 export const store = configureStore({
@@ -23,6 +24,7 @@ export const store = configureStore({
     [uploadRulesApi.reducerPath]: uploadRulesApi.reducer,
     [usersApi.reducerPath]: usersApi.reducer,
     [rolesApi.reducerPath]: rolesApi.reducer,
+    [permissionsApi.reducerPath]: permissionsApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware().concat(
@@ -35,6 +37,7 @@ export const store = configureStore({
       uploadRulesApi.middleware,
       usersApi.middleware,
       rolesApi.middleware,
+      permissionsApi.middleware,
     ),
 });
 
