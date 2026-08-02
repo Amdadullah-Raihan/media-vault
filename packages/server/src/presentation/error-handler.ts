@@ -26,7 +26,7 @@ export function errorHandler(err: Error, _req: Request, res: Response, _next: Ne
 
   // Known application errors
   if (err instanceof AppError) {
-    error(res, err.statusCode, err.errorCode, err.message);
+    error(res, err.statusCode, err.errorCode, err.message, err.details);
     return;
   }
 

@@ -89,7 +89,7 @@ export default function UploadPage() {
             ? {
                 ...u,
                 status: 'error' as const,
-                error: apiErr?.data?.message ?? 'Upload failed',
+                error: apiErr.data?.error?.message ?? 'Upload failed',
               }
             : u,
         ),

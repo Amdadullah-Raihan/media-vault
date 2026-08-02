@@ -29,6 +29,7 @@ export default function UserCreatePage() {
   const {
     register,
     handleSubmit,
+    setError,
     formState: { errors },
   } = useForm<CreateUserFormData>({
     resolver: zodResolver(createUserSchema),
@@ -46,7 +47,23 @@ export default function UserCreatePage() {
       navigate(ROUTES.USERS);
     } catch (err: unknown) {
       const apiErr = err as { data?: ApiError };
-      toast.error(apiErr.data?.message ?? 'Failed to create user');
+
+      // Map server field-level errors to form fields (shown inline, not as toast)
+      const details = apiErr.data?.error.details;
+      if (details && details.length > 0) {
+        let matched = false;
+        for (const { path, message } of details) {
+          if (path in createUserSchema.shape) {
+            setError(path as keyof CreateUserFormData, { message });
+            matched = true;
+          }
+        }
+        if (matched) {
+          return; // field errors shown inline — no toast needed
+        }
+      }
+
+      toast.error(apiErr.data?.error.message ?? 'Failed to create user');
     }
   };
 

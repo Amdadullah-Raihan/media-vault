@@ -82,7 +82,7 @@ export default function SettingsPage() {
       reset();
     } catch (err: unknown) {
       const apiErr = err as { data?: ApiError };
-      toast.error(apiErr.data?.message ?? 'Failed to change password');
+      toast.error(apiErr.data?.error?.message ?? 'Failed to change password');
     }
   };
 

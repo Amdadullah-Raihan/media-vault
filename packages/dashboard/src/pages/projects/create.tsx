@@ -42,7 +42,7 @@ export default function ProjectCreatePage() {
       navigate(`/projects/${result.data.id}`);
     } catch (err: unknown) {
       const apiErr = err as { data?: ApiError };
-      toast.error(apiErr?.data?.message ?? 'Failed to create project');
+      toast.error(apiErr.data?.error?.message ?? 'Failed to create project');
     }
   };
 

@@ -81,7 +81,7 @@ export default function RoleCreatePage() {
       navigate(`/roles/${result.data.id}`);
     } catch (err: unknown) {
       const apiErr = err as { data?: ApiError };
-      toast.error(apiErr.data?.message ?? 'Failed to create role');
+      toast.error(apiErr.data?.error?.message ?? 'Failed to create role');
     }
   };
 

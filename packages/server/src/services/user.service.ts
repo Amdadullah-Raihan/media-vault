@@ -56,13 +56,17 @@ export class UserService {
     // Check username uniqueness
     const existingUsername = await this.users.findByUsername(input.username);
     if (existingUsername) {
-      throw new ConflictError(`Username "${input.username}" is already taken`);
+      throw new ConflictError(`Username "${input.username}" is already taken`, [
+        { path: 'username', message: `Username "${input.username}" is already taken` },
+      ]);
     }
 
     // Check email uniqueness
     const existingEmail = await this.users.findByEmail(input.email);
     if (existingEmail) {
-      throw new ConflictError(`Email "${input.email}" is already in use`);
+      throw new ConflictError(`Email "${input.email}" is already in use`, [
+        { path: 'email', message: `Email "${input.email}" is already in use` },
+      ]);
     }
 
     // Validate role exists
