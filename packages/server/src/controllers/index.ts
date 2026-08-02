@@ -5,3 +5,5 @@ export { FileController } from './file.controller';
 export { AuthController } from './auth.controller';
 export { SettingsController } from './settings.controller';
 export { UploadRulesController } from './upload-rules.controller';
+export { UserController } from './user.controller';
+export { RoleController } from './role.controller';

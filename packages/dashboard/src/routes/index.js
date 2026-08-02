@@ -16,6 +16,9 @@ const FileDetailPage = lazy(() => import('@/pages/files/detail'));
 const ApiKeysPage = lazy(() => import('@/pages/api-keys/list'));
 const SettingsPage = lazy(() => import('@/pages/settings'));
 const LogsPage = lazy(() => import('@/pages/logs'));
+const UsersListPage = lazy(() => import('@/pages/users/list'));
+const UserCreatePage = lazy(() => import('@/pages/users/create'));
+const RolesListPage = lazy(() => import('@/pages/roles/list'));
 const NotFoundPage = lazy(() => import('@/pages/not-found'));
 function LazyPage({ children }) {
     return _jsx(Suspense, { fallback: _jsx(PageSpinner, {}), children: children });
@@ -75,6 +78,18 @@ export const router = createBrowserRouter([
                     {
                         path: 'logs',
                         element: (_jsx(LazyPage, { children: _jsx(LogsPage, {}) })),
+                    },
+                    {
+                        path: 'users',
+                        element: (_jsx(LazyPage, { children: _jsx(UsersListPage, {}) })),
+                    },
+                    {
+                        path: 'users/new',
+                        element: (_jsx(LazyPage, { children: _jsx(UserCreatePage, {}) })),
+                    },
+                    {
+                        path: 'roles',
+                        element: (_jsx(LazyPage, { children: _jsx(RolesListPage, {}) })),
                     },
                 ],
             },

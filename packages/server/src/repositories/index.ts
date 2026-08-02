@@ -4,3 +4,6 @@ export { FolderRepository } from './folder.repository';
 export { FileMetadataRepository } from './file-metadata.repository';
 export { SettingsRepository } from './settings.repository';
 export { SessionRepository } from './session.repository';
+export { UserRepository } from './user.repository';
+export { RoleRepository } from './role.repository';
+export { AuditRepository } from './audit.repository';

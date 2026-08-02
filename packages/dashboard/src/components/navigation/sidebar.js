@@ -1,7 +1,7 @@
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import { NavLink, useLocation } from 'react-router-dom';
 import { cn } from '@/utils';
-import { LayoutDashboard, FolderOpen, FileText, Key, Upload, Settings, Activity, ChevronLeft, } from 'lucide-react';
+import { LayoutDashboard, FolderOpen, FileText, Key, Upload, Settings, Activity, Users, Shield, ChevronLeft, } from 'lucide-react';
 import { useAppSelector, useAppDispatch } from '@/redux/store';
 import { toggleSidebar } from '@/redux/slices/ui.slice';
 import { APP_NAME } from '@/constants';
@@ -12,6 +12,8 @@ const navItems = [
     { label: 'Upload', href: '/upload', icon: Upload },
     { label: 'API Keys', href: '/api-keys', icon: Key },
     { label: 'Settings', href: '/settings', icon: Settings },
+    { label: 'Users', href: '/users', icon: Users },
+    { label: 'Roles', href: '/roles', icon: Shield },
     { label: 'Logs', href: '/logs', icon: Activity },
 ];
 export function Sidebar() {

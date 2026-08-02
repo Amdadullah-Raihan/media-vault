@@ -1,5 +1,5 @@
 // ---------------------------------------------------------------------------
-// MediaVault – Auth Controller
+// MediaVault – Auth Controller (v2 — multi-user)
 // ---------------------------------------------------------------------------
 
 import { Request, Response, NextFunction } from 'express';
@@ -15,6 +15,15 @@ const COOKIE_OPTIONS = {
   maxAge: 24 * 60 * 60 * 1000, // 24 hours
 };
 
+function clientInfo(req: Request): { ip: string; userAgent: string } {
+  const forwarded = req.headers['x-forwarded-for'];
+  const ua = req.headers['user-agent'];
+  return {
+    ip: typeof forwarded === 'string' ? forwarded : (req.ip ?? 'unknown'),
+    userAgent: typeof ua === 'string' ? ua : 'unknown',
+  };
+}
+
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
@@ -26,21 +35,22 @@ export class AuthController {
     const { username, password } = req.body as { username?: string; password?: string };
 
     if (!username || !password) {
-      error(res, 400, 'BAD_REQUEST', 'Username and password are required.');
+      error(res, 400, 'BAD_REQUEST', 'Username/email and password are required.');
       return;
     }
 
-    const result = await this.authService.login(username, password);
+    const { ip, userAgent } = clientInfo(req);
+    const result = await this.authService.login(username, password, ip, userAgent);
 
     if (!result) {
-      error(res, 401, 'UNAUTHORIZED', 'Invalid username or password.');
+      error(res, 401, 'UNAUTHORIZED', 'Invalid credentials.');
       return;
     }
 
     res.cookie(SESSION_COOKIE, result.sessionId, COOKIE_OPTIONS);
     ok(res, {
       id: result.sessionId,
-      username: result.username,
+      user: result.user,
       createdAt: new Date().toISOString(),
     });
   };
@@ -53,7 +63,8 @@ export class AuthController {
     const sessionId = req.cookies[SESSION_COOKIE] as string | undefined;
 
     if (sessionId) {
-      await this.authService.logout(sessionId);
+      const { ip, userAgent } = clientInfo(req);
+      await this.authService.logout(sessionId, ip, userAgent);
     }
 
     res.clearCookie(SESSION_COOKIE, { path: '/' });
@@ -80,7 +91,11 @@ export class AuthController {
       return;
     }
 
-    ok(res, { id: sessionId, username: session.username, createdAt: new Date().toISOString() });
+    ok(res, {
+      id: sessionId,
+      user: session.user,
+      createdAt: new Date().toISOString(),
+    });
   };
 
   // -----------------------------------------------------------------------
@@ -88,12 +103,6 @@ export class AuthController {
   // -----------------------------------------------------------------------
 
   changePassword = async (req: Request, res: Response, _next: NextFunction): Promise<void> => {
-    const sessionId = req.cookies[SESSION_COOKIE] as string | undefined;
-    if (!sessionId) {
-      error(res, 401, 'UNAUTHORIZED', 'No active session.');
-      return;
-    }
-
     const { currentPassword, newPassword } = req.body as Record<string, unknown>;
 
     if (
@@ -111,7 +120,20 @@ export class AuthController {
       return;
     }
 
-    const changed = await this.authService.changePassword(currentPassword, newPassword);
+    const userId = req.userId;
+    if (!userId) {
+      error(res, 401, 'UNAUTHORIZED', 'No active session.');
+      return;
+    }
+
+    const { ip, userAgent } = clientInfo(req);
+    const changed = await this.authService.changePassword(
+      userId,
+      currentPassword,
+      newPassword,
+      ip,
+      userAgent,
+    );
 
     if (!changed) {
       error(res, 400, 'BAD_REQUEST', 'Current password is incorrect.');

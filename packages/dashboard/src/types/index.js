@@ -15,4 +15,17 @@ export var MimeCategory;
     MimeCategory["Archive"] = "archive";
     MimeCategory["Other"] = "other";
 })(MimeCategory || (MimeCategory = {}));
+// ---------------------------------------------------------------------------
+// User
+// ---------------------------------------------------------------------------
+export var UserStatus;
+(function (UserStatus) {
+    UserStatus["Pending"] = "pending";
+    UserStatus["Active"] = "active";
+    UserStatus["Locked"] = "locked";
+    UserStatus["Suspended"] = "suspended";
+    UserStatus["Disabled"] = "disabled";
+    UserStatus["Archived"] = "archived";
+    UserStatus["Deleted"] = "deleted";
+})(UserStatus || (UserStatus = {}));
 //# sourceMappingURL=index.js.map

@@ -204,3 +204,114 @@ export interface UpdateSettingsRequest {
   maxFileSizeBytes?: number;
   allowedMimeTypes?: string[];
 }
+
+// ---------------------------------------------------------------------------
+// Auth v2 (multi-user)
+// ---------------------------------------------------------------------------
+
+export interface AuthUser {
+  id: string;
+  username: string;
+  displayName: string;
+  roleId: string;
+  permissions: string[];
+}
+
+export interface AuthSession {
+  id: string;
+  user: AuthUser;
+  createdAt: string;
+}
+
+// ---------------------------------------------------------------------------
+// User
+// ---------------------------------------------------------------------------
+
+export enum UserStatus {
+  Pending = 'pending',
+  Active = 'active',
+  Locked = 'locked',
+  Suspended = 'suspended',
+  Disabled = 'disabled',
+  Archived = 'archived',
+  Deleted = 'deleted',
+}
+
+export interface UserProfile {
+  id: string;
+  avatar: string | null;
+  firstName: string;
+  lastName: string;
+  displayName: string;
+  username: string;
+  email: string;
+  status: UserStatus;
+  roleId: string;
+  assignedProjectIds: string[];
+  preferredLanguage: string;
+  timezone: string;
+  lastLoginAt: string | null;
+  lastActiveAt: string | null;
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateUserRequest {
+  username: string;
+  email: string;
+  password: string;
+  firstName: string;
+  lastName: string;
+  roleId: string;
+  assignedProjectIds?: string[];
+}
+
+export interface UpdateUserRequest {
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+  roleId?: string;
+  assignedProjectIds?: string[];
+  status?: UserStatus;
+}
+
+// ---------------------------------------------------------------------------
+// Role
+// ---------------------------------------------------------------------------
+
+export interface Role {
+  id: string;
+  name: string;
+  description: string;
+  permissions: string[];
+  isBuiltIn: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateRoleRequest {
+  name: string;
+  description: string;
+  permissions: string[];
+}
+
+export interface UpdateRoleRequest {
+  name?: string;
+  description?: string;
+  permissions?: string[];
+}
+
+// ---------------------------------------------------------------------------
+// Permissions
+// ---------------------------------------------------------------------------
+
+export interface PermissionGroup {
+  label: string;
+  permissions: string[];
+}
+
+export interface PermissionsCatalog {
+  permissions: string[];
+  groups: PermissionGroup[];
+}

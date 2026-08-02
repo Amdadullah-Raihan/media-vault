@@ -13,10 +13,18 @@ import {
   AuthController,
   SettingsController,
   UploadRulesController,
+  UserController,
+  RoleController,
 } from '../controllers';
-import { SettingsRepository, SessionRepository } from '../repositories';
-import { AuthService } from '../services';
-import { authenticate, optionalAuthenticate, requireProject } from '../auth';
+import {
+  SessionRepository,
+  UserRepository,
+  RoleRepository,
+  AuditRepository,
+} from '../repositories';
+import { AuthService, UserService, RoleService } from '../services';
+import { authenticate, optionalAuthenticate, requireProject, authorize } from '../auth';
+import { PERMISSIONS, PERMISSION_GROUPS } from '../auth';
 import { validate } from '../validation';
 import {
   createProjectSchema,
@@ -27,8 +35,30 @@ import {
   uuidParamSchema,
 } from '../validation';
 
-const router = Router();
+const config = getConfig();
 
+// Repositories
+const sessionRepo = new SessionRepository();
+const userRepo = new UserRepository();
+const roleRepo = new RoleRepository();
+const auditRepo = new AuditRepository();
+
+// Services
+const authService = new AuthService(
+  sessionRepo,
+  userRepo,
+  roleRepo,
+  auditRepo,
+  config.auth.adminUsername,
+  config.auth.adminPassword,
+);
+const userService = new UserService(userRepo, roleRepo, auditRepo);
+const roleService = new RoleService(roleRepo, auditRepo);
+
+// Controllers
+const authController = new AuthController(authService);
+const userController = new UserController(userService);
+const roleController = new RoleController(roleService);
 const projectController = new ProjectController();
 const apiKeyController = new ApiKeyController();
 const folderController = new FolderController();
@@ -36,18 +66,7 @@ const fileController = new FileController();
 const settingsController = new SettingsController();
 const uploadRulesController = new UploadRulesController();
 
-const config = getConfig();
-
-// Auth setup
-const settingsRepo = new SettingsRepository();
-const sessionRepo = new SessionRepository();
-const authService = new AuthService(
-  settingsRepo,
-  sessionRepo,
-  config.auth.adminUsername,
-  config.auth.adminPassword,
-);
-const authController = new AuthController(authService);
+const router = Router();
 
 // Multer: in-memory storage (streamed to the storage driver)
 const upload = multer({
@@ -63,6 +82,68 @@ router.post('/auth/login', authController.login);
 router.post('/auth/logout', authController.logout);
 router.get('/auth/session', authController.session);
 router.post('/auth/change-password', authController.changePassword);
+
+// =========================================================================
+// Users
+// =========================================================================
+
+router.get('/users', authenticate, authorize(PERMISSIONS.USERS_VIEW), userController.list);
+router.post('/users', authenticate, authorize(PERMISSIONS.USERS_CREATE), userController.create);
+router.get('/users/:id', authenticate, authorize(PERMISSIONS.USERS_VIEW), userController.getById);
+router.patch('/users/:id', authenticate, authorize(PERMISSIONS.USERS_EDIT), userController.update);
+router.delete(
+  '/users/:id',
+  authenticate,
+  authorize(PERMISSIONS.USERS_DELETE),
+  userController.delete,
+);
+router.post(
+  '/users/:id/suspend',
+  authenticate,
+  authorize(PERMISSIONS.USERS_EDIT),
+  userController.suspend,
+);
+router.post(
+  '/users/:id/restore',
+  authenticate,
+  authorize(PERMISSIONS.USERS_EDIT),
+  userController.restore,
+);
+router.post(
+  '/users/:id/unlock',
+  authenticate,
+  authorize(PERMISSIONS.USERS_EDIT),
+  userController.unlock,
+);
+
+// =========================================================================
+// Roles
+// =========================================================================
+
+router.get('/roles', authenticate, authorize(PERMISSIONS.USERS_VIEW), roleController.list);
+router.post('/roles', authenticate, authorize(PERMISSIONS.USERS_CREATE), roleController.create);
+router.get('/roles/:id', authenticate, authorize(PERMISSIONS.USERS_VIEW), roleController.getById);
+router.patch('/roles/:id', authenticate, authorize(PERMISSIONS.USERS_EDIT), roleController.update);
+router.delete(
+  '/roles/:id',
+  authenticate,
+  authorize(PERMISSIONS.USERS_DELETE),
+  roleController.delete,
+);
+router.post(
+  '/roles/:id/duplicate',
+  authenticate,
+  authorize(PERMISSIONS.USERS_CREATE),
+  roleController.duplicate,
+);
+
+// Permissions catalog (read-only, requires auth)
+router.get('/permissions', authenticate, (_req, res) => {
+  res.json({
+    success: true,
+    data: { permissions: Object.values(PERMISSIONS), groups: PERMISSION_GROUPS },
+  });
+});
 
 // Settings (dashboard configuration)
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
