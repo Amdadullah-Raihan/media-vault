@@ -4,6 +4,152 @@ A production-ready, open-source, self-hosted media management server.
 
 MediaVault is a lightweight media server that developers can host on their own VPS, dedicated server, or shared hosting. Its purpose is to separate media storage from application backends.
 
+## Getting Started
+
+### Prerequisites
+
+- Node.js >= 18
+- npm >= 9
+
+### Local Setup
+
+```bash
+# 1. Clone the repository
+git clone https://github.com/Amdadullah-Raihan/media-vault.git
+cd media-vault
+
+# 2. Install dependencies
+npm install
+
+# 3. Build everything (SDK → CLI → Dashboard → Server)
+npm run build
+
+# 4. Configure environment
+cp packages/server/.env.example packages/server/.env
+nano packages/server/.env
+```
+
+### Start the Server
+
+```bash
+# Development
+npm run dev
+
+# Production
+NODE_ENV=production node packages/server/dist/index.js
+```
+
+The server starts on `http://localhost:3000` by default.
+
+### Default Admin Credentials
+
+The dashboard uses the following defaults from `.env`:
+
+| Variable         | Default       |
+| ---------------- | ------------- |
+| `ADMIN_USERNAME` | `admin`       |
+| `ADMIN_PASSWORD` | `admin123456` |
+
+**Change these before deploying.** You can update the password from the dashboard Settings page after logging in — changes persist in the database and survive restarts.
+
+### VPS / Dedicated Server
+
+```bash
+# 1. Clone and install
+git clone https://github.com/Amdadullah-Raihan/media-vault.git
+cd media-vault && npm install
+
+# 2. Build all packages
+npm run build
+
+# 3. Configure .env — set ADMIN_USERNAME, ADMIN_PASSWORD, MEDIAVAULT_SIGNED_URL_SECRET
+cp packages/server/.env.example packages/server/.env
+nano packages/server/.env
+
+# 4. Start with PM2 (recommended)
+npm install -g pm2
+NODE_ENV=production pm2 start packages/server/dist/index.js --name mediavault
+pm2 save && pm2 startup
+```
+
+### Shared Hosting (cPanel / Plesk)
+
+npm workspaces and hoisted `node_modules` don't work on most shared hosts. Use the flat deployment builder instead:
+
+```bash
+# 1. Clone, install, and build locally
+git clone https://github.com/Amdadullah-Raihan/media-vault.git
+cd media-vault && npm install
+
+# 2. Build and create self-contained deployment package
+npm run deploy
+```
+
+This creates a `media-vault-deploy/` directory with a flat, self-contained structure:
+
+```
+media-vault-deploy/
+├── server.js            # Entry point (point cPanel here)
+├── package.json         # Flat, production-only dependencies
+├── node_modules/        # Self-contained (no workspaces)
+├── dist/                # Compiled server
+├── dashboard/
+│   └── dist/            # Built frontend
+└── .env.example         # Environment template
+```
+
+**Then on your shared host:**
+
+1. Upload the entire `media-vault-deploy/` folder to your server
+2. Copy `.env.example` to `.env` and configure credentials
+3. In cPanel **Setup Node.js App**:
+   - **Application root:** `/home/user/media-vault-deploy`
+   - **Startup file:** `server.js`
+   - **Node.js version:** >= 18
+4. Ensure write permissions on `media-vault-deploy/data/` and `media-vault-deploy/uploads/`
+
+- **JSON:** Requires write permission on `data/` — no database server needed
+- **Uploads:** Set `MEDIAVAULT_STORAGE_LOCAL_PATH` to an absolute path outside web root
+
+### Reverse Proxy (nginx)
+
+```nginx
+server {
+    listen 80;
+    server_name media.example.com;
+
+    client_max_body_size 100M;
+
+    location / {
+        proxy_pass http://127.0.0.1:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_cache_bypass $http_upgrade;
+    }
+}
+```
+
+### Folder Structure After Build
+
+```
+media-vault/
+├── packages/
+│   ├── server/
+│   │   ├── dist/          # Compiled backend
+│   │   ├── data/          # JSON data files (projects, keys, sessions, etc.)
+│   │   ├── uploads/       # File storage
+│   │   └── .env           # Configuration
+│   └── dashboard/
+│       └── dist/          # Built frontend (served by server)
+├── node_modules/
+└── package.json
+```
+
+The server resolves `packages/dashboard/dist/` relative to its own location — deploy the entire repo and it just works.
+
 ## Philosophy
 
 - **Simplicity First** — No Redis, no RabbitMQ, no Kubernetes required. Everything works locally with minimal configuration.
@@ -29,41 +175,6 @@ packages/
 ├── sdk/              # TypeScript SDK (wraps REST API)
 └── cli/              # CLI tool (init, start, doctor, etc.)
 ```
-
-## Quick Start
-
-### Prerequisites
-
-- Node.js >= 18
-- npm >= 9
-
-### Setup
-
-```bash
-# Clone and install
-git clone <repo-url> media-vault
-cd media-vault
-npm install
-
-# Set up environment
-cp .env.example .env
-
-# Start development server
-npm run dev
-```
-
-The server starts on `http://localhost:3000` by default.
-
-### Default Admin Credentials
-
-The dashboard uses the following defaults from `.env`:
-
-| Variable         | Default       |
-| ---------------- | ------------- |
-| `ADMIN_USERNAME` | `admin`       |
-| `ADMIN_PASSWORD` | `admin123456` |
-
-**Change these before deploying.** You can update the password from the dashboard Settings page after logging in — changes persist in the database and survive restarts.
 
 ## API Overview
 
@@ -246,124 +357,6 @@ import type {
 | Bun             | 🔜 Upcoming      |
 | Python SDK      | 🔜 Upcoming      |
 | PHP SDK         | 🔜 Upcoming      |
-
-## Deployment
-
-MediaVault is a single Node.js process backed by JSON files — no external databases or caches required. The monorepo is the deployable unit. After building, the server automatically serves the dashboard from its relative path — no need to move files around.
-
-```bash
-# 1. Clone and install
-git clone <repo-url> media-vault && cd media-vault && npm install
-
-# 2. Build everything (SDK → CLI → Dashboard → Server)
-npm run build
-
-# 3. Configure environment
-cp packages/server/.env.example packages/server/.env
-nano packages/server/.env
-
-# 4. Start (dev)
-npm run dev
-
-# Or start in production
-NODE_ENV=production node packages/server/dist/index.js
-```
-
-### Folder structure after build
-
-```
-media-vault/
-├── packages/
-│   ├── server/
-│   │   ├── dist/          # Compiled backend
-│   │   ├── data/          # JSON data files (projects, keys, sessions, etc.)
-│   │   ├── uploads/       # File storage
-│   │   └── .env           # Configuration
-│   └── dashboard/
-│       └── dist/          # Built frontend (served by server)
-├── node_modules/
-└── package.json
-```
-
-The server resolves `packages/dashboard/dist/` relative to its own location — deploy the entire repo and it just works.
-
-### VPS / Dedicated Server
-
-```bash
-# 1. Clone and install
-git clone <repo-url> media-vault && cd media-vault && npm install
-
-# 2. Build all packages
-npm run build
-
-# 3. Configure .env — set ADMIN_USERNAME, ADMIN_PASSWORD, MEDIAVAULT_SIGNED_URL_SECRET
-cp packages/server/.env.example packages/server/.env
-nano packages/server/.env
-
-# 4. Start with PM2 (recommended)
-npm install -g pm2
-NODE_ENV=production pm2 start packages/server/dist/index.js --name mediavault
-pm2 save && pm2 startup
-```
-
-### Shared Hosting (cPanel / Plesk)
-
-npm workspaces and hoisted `node_modules` don't work on most shared hosts. Use the flat deployment builder instead:
-
-```bash
-# 1. Clone, install, and build locally
-git clone <repo-url> media-vault && cd media-vault && npm install
-
-# 2. Build and create self-contained deployment package
-npm run deploy
-```
-
-This creates a `media-vault-deploy/` directory with a flat, self-contained structure:
-
-```
-media-vault-deploy/
-├── server.js            # Entry point (point cPanel here)
-├── package.json         # Flat, production-only dependencies
-├── node_modules/        # Self-contained (no workspaces)
-├── dist/                # Compiled server
-├── dashboard/
-│   └── dist/            # Built frontend
-└── .env.example         # Environment template
-```
-
-**Then on your shared host:**
-
-1. Upload the entire `media-vault-deploy/` folder to your server
-2. Copy `.env.example` to `.env` and configure credentials
-3. In cPanel **Setup Node.js App**:
-   - **Application root:** `/home/user/media-vault-deploy`
-   - **Startup file:** `server.js`
-   - **Node.js version:** >= 18
-4. Ensure write permissions on `media-vault-deploy/data/` and `media-vault-deploy/uploads/`
-
-- **JSON:** Requires write permission on `data/` — no database server needed
-- **Uploads:** Set `MEDIAVAULT_STORAGE_LOCAL_PATH` to an absolute path outside web root
-
-### Reverse Proxy (nginx)
-
-```nginx
-server {
-    listen 80;
-    server_name media.example.com;
-
-    client_max_body_size 100M;
-
-    location / {
-        proxy_pass http://127.0.0.1:3000;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection 'upgrade';
-        proxy_set_header Host $host;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_cache_bypass $http_upgrade;
-    }
-}
-```
 
 ## Configuration
 
