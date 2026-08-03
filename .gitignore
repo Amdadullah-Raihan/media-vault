@@ -9,6 +9,13 @@ packages/dashboard/dist/
 packages/server/dist/
 packages/sdk/dist/
 
+# TypeScript compiled output (source is .ts/.tsx)
+packages/*/src/**/*.js
+packages/*/src/**/*.js.map
+
+# TypeScript incremental build
+*.tsbuildinfo
+
 # Deployment output
 media-vault-deploy/
 

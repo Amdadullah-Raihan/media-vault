@@ -20,6 +20,7 @@
     "noUncheckedIndexedAccess": true,
     "exactOptionalPropertyTypes": false,
     "noImplicitOverride": true,
-    "isolatedModules": true
+    "isolatedModules": true,
+    "ignoreDeprecations": "5.0"
   }
 }

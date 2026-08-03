@@ -4,8 +4,14 @@ import { useDropzone } from 'react-dropzone';
 import { useUploadFileMutation } from '@/services/files.service';
 import { useGetProjectsQuery } from '@/services/projects.service';
 import { PageHeader } from '@/components/shared';
-import { Select, Progress, Button } from '@/components/ui';
-import { PageSkeleton } from '@/components/ui';
+import {
+  Select,
+  Progress,
+  Button,
+  ForbiddenState,
+  PageSpinner,
+  PageSkeleton,
+} from '@/components/ui';
 import {
   Upload,
   FileText,
@@ -18,6 +24,7 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { formatFileSize } from '@/utils';
+import { usePermissions } from '@/hooks';
 import type { SelectOption } from '@/components/ui';
 import type { ApiError } from '@/types';
 
@@ -31,12 +38,20 @@ interface UploadItem {
 
 export default function UploadPage() {
   const navigate = useNavigate();
+  const { hasPermission, isLoading: permissionsLoading } = usePermissions();
+  const canUpload = hasPermission('files.upload');
+
   const [projectId, setProjectId] = useState('');
   const [visibility, setVisibility] = useState('private');
   const [uploads, setUploads] = useState<UploadItem[]>([]);
   const [uploadFile] = useUploadFileMutation();
 
-  const { data: projectsData, isLoading: projectsLoading } = useGetProjectsQuery();
+  const { data: projectsData, isLoading: projectsLoading } = useGetProjectsQuery(undefined, {
+    skip: !canUpload,
+  });
+
+  if (permissionsLoading) return <PageSpinner />;
+  if (!canUpload) return <ForbiddenState />;
 
   const projectOptions: SelectOption[] =
     projectsData?.data.data.map((p) => ({ value: p.id, label: p.name })) ?? [];
@@ -89,7 +104,7 @@ export default function UploadPage() {
             ? {
                 ...u,
                 status: 'error' as const,
-                error: apiErr?.data?.message ?? 'Upload failed',
+                error: apiErr.data?.error.message ?? 'Upload failed',
               }
             : u,
         ),
@@ -139,7 +154,9 @@ export default function UploadPage() {
           placeholder="Select a project"
           options={projectOptions}
           value={projectId}
-          onChange={(e) => setProjectId(e.target.value)}
+          onChange={(e) => {
+            setProjectId(e.target.value);
+          }}
         />
         <Select
           id="visibility"
@@ -149,7 +166,9 @@ export default function UploadPage() {
             { value: 'public', label: 'Public' },
           ]}
           value={visibility}
-          onChange={(e) => setVisibility(e.target.value)}
+          onChange={(e) => {
+            setVisibility(e.target.value);
+          }}
         />
       </div>
 

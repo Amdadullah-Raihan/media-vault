@@ -5,9 +5,17 @@ import { PageHeader } from '@/components/shared';
 import { ConfirmDialog } from '@/components/shared';
 import { SearchInput } from '@/components/shared';
 import { Pagination } from '@/components/shared';
-import { Button, Badge, PageSkeleton, ErrorState, EmptyState } from '@/components/ui';
+import {
+  Button,
+  Badge,
+  PageSkeleton,
+  ErrorState,
+  EmptyState,
+  ForbiddenState,
+  PageSpinner,
+} from '@/components/ui';
 import { DropdownMenu, DropdownItem, DropdownSeparator } from '@/components/ui';
-import { useConfirm } from '@/hooks';
+import { useConfirm, usePermissions } from '@/hooks';
 import { formatDate } from '@/utils';
 import { Plus, FolderOpen, MoreVertical, ExternalLink, Trash2, Copy } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -15,9 +23,17 @@ import type { Project } from '@/types';
 
 export default function ProjectsListPage() {
   const navigate = useNavigate();
+  const { hasPermission, isLoading: permissionsLoading } = usePermissions();
+  const canView = hasPermission('projects.view');
+  const canCreate = hasPermission('projects.create');
+  const canDelete = hasPermission('projects.delete');
+
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
-  const { data, isLoading, isError, refetch } = useGetProjectsQuery({ page, limit: 12 });
+  const { data, isLoading, isError, refetch } = useGetProjectsQuery(
+    { page, limit: 12 },
+    { skip: !canView },
+  );
   const [deleteProject, { isLoading: deleting }] = useDeleteProjectMutation();
   const { confirm, confirmState, handleConfirm, handleClose } = useConfirm();
 
@@ -45,6 +61,9 @@ export default function ProjectsListPage() {
     toast.success('ID copied to clipboard');
   };
 
+  if (permissionsLoading) return <PageSpinner />;
+  if (!canView) return <ForbiddenState />;
+
   if (isLoading) return <PageSkeleton />;
   if (isError) return <ErrorState onRetry={refetch} />;
 
@@ -54,10 +73,12 @@ export default function ProjectsListPage() {
         title="Projects"
         description="Manage your MediaVault projects and their configurations."
         actions={
-          <Button onClick={() => navigate('/projects/new')}>
-            <Plus className="h-4 w-4" />
-            New Project
-          </Button>
+          canCreate ? (
+            <Button onClick={() => navigate('/projects/new')}>
+              <Plus className="h-4 w-4" />
+              New Project
+            </Button>
+          ) : undefined
         }
       />
 
@@ -118,11 +139,15 @@ export default function ProjectsListPage() {
                         <Copy className="mr-2 h-4 w-4" />
                         Copy ID
                       </DropdownItem>
-                      <DropdownSeparator />
-                      <DropdownItem onClick={() => handleDelete(project)} destructive>
-                        <Trash2 className="mr-2 h-4 w-4" />
-                        Delete
-                      </DropdownItem>
+                      {canDelete && (
+                        <>
+                          <DropdownSeparator />
+                          <DropdownItem onClick={() => handleDelete(project)} destructive>
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Delete
+                          </DropdownItem>
+                        </>
+                      )}
                     </DropdownMenu>
                   </div>
                   {project.description && (

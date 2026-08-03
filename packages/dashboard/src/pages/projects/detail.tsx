@@ -8,8 +8,15 @@ import {
 import { useGetFilesQuery } from '@/services/files.service';
 import { PageHeader, StatCard } from '@/components/shared';
 import { ConfirmDialog } from '@/components/shared';
-import { Button, Badge, PageSkeleton, ErrorState } from '@/components/ui';
-import { useConfirm } from '@/hooks';
+import {
+  Button,
+  Badge,
+  PageSkeleton,
+  ErrorState,
+  ForbiddenState,
+  PageSpinner,
+} from '@/components/ui';
+import { useConfirm, usePermissions } from '@/hooks';
 import { formatDate, formatFileSize, formatRelativeTime } from '@/utils';
 import { ArrowLeft, FileText, Key, HardDrive, Plus, Trash2, Copy, EyeOff } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -22,9 +29,23 @@ export default function ProjectDetailPage() {
   const { confirm, confirmState, handleConfirm, handleClose } = useConfirm();
   const [newKeyValue, setNewKeyValue] = useState<string | null>(null);
 
-  const { data: projectData, isLoading, isError, refetch } = useGetProjectQuery(id!);
-  const { data: keysData } = useGetApiKeysQuery(id);
-  const { data: filesData } = useGetFilesQuery({ projectId: id, limit: 10 });
+  const { hasPermission, isLoading: permissionsLoading } = usePermissions();
+  const canView = hasPermission('projects.view');
+  const canDelete = hasPermission('projects.delete');
+  const canCreateKey = hasPermission('apikeys.create');
+  const canDeleteKey = hasPermission('apikeys.delete');
+
+  const {
+    data: projectData,
+    isLoading,
+    isError,
+    refetch,
+  } = useGetProjectQuery(id!, { skip: !canView || !id });
+  const { data: keysData } = useGetApiKeysQuery(id, { skip: !canView });
+  const { data: filesData } = useGetFilesQuery({ projectId: id, limit: 10 }, { skip: !canView });
+
+  if (permissionsLoading) return <PageSpinner />;
+  if (!canView) return <ForbiddenState />;
   const [deleteProject, { isLoading: deleting }] = useDeleteProjectMutation();
   const [createApiKey, { isLoading: creatingKey }] = useCreateApiKeyMutation();
   const [revokeApiKey] = useRevokeApiKeyMutation();
@@ -101,10 +122,12 @@ export default function ProjectDetailPage() {
           title={project.name}
           description={project.description ?? undefined}
           actions={
-            <Button variant="destructive" size="sm" onClick={handleDelete} loading={deleting}>
-              <Trash2 className="h-4 w-4" />
-              Delete Project
-            </Button>
+            canDelete ? (
+              <Button variant="destructive" size="sm" onClick={handleDelete} loading={deleting}>
+                <Trash2 className="h-4 w-4" />
+                Delete Project
+              </Button>
+            ) : undefined
           }
         />
       </div>
@@ -121,10 +144,12 @@ export default function ProjectDetailPage() {
         <div>
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-lg font-semibold">API Keys</h2>
-            <Button size="sm" onClick={handleGenerateKey} loading={creatingKey}>
-              <Plus className="h-4 w-4" />
-              Generate Key
-            </Button>
+            {canCreateKey && (
+              <Button size="sm" onClick={handleGenerateKey} loading={creatingKey}>
+                <Plus className="h-4 w-4" />
+                Generate Key
+              </Button>
+            )}
           </div>
 
           {newKeyValue && (
@@ -170,15 +195,17 @@ export default function ProjectDetailPage() {
                         {key.lastUsedAt && ` · Last used ${formatRelativeTime(key.lastUsedAt)}`}
                       </p>
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="icon-sm"
-                      onClick={() => handleRevokeKey(key)}
-                      className="text-destructive hover:text-destructive"
-                      aria-label="Revoke API key"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                    {canDeleteKey && (
+                      <Button
+                        variant="ghost"
+                        size="icon-sm"
+                        onClick={() => handleRevokeKey(key)}
+                        className="text-destructive hover:text-destructive"
+                        aria-label="Revoke API key"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    )}
                   </div>
                 ))}
               </div>

@@ -2,6 +2,16 @@
 
 Official TypeScript SDK for [MediaVault](https://github.com/your-org/media-vault) — a self-hosted media management server. This SDK wraps every REST API endpoint so you never need to build HTTP requests manually.
 
+## Before You Start (Required)
+
+This SDK connects to your own MediaVault server. Before using it, you must:
+
+1. Go to the official repository: https://github.com/Amdadullah-Raihan/media-vault
+2. Download/clone the project
+3. Host and run it yourself (for example on shared hosting, a VPS, or your own server)
+
+After your server is running, use the SDK in your project to use media-vault to manage your media`.
+
 ## Features
 
 - 🚀 **Full API coverage** — Projects, API Keys, Folders, Files (upload, download, stream)
@@ -45,9 +55,9 @@ console.log(`Project created: ${project.id}`);
 // Upload a file
 const file = await client.uploadFile(
   project.id,
-  fileBuffer,       // Buffer (Node.js) or Blob (browser)
+  fileBuffer, // Buffer (Node.js) or Blob (browser)
   'photo.jpg',
-  { visibility: 'public' }
+  { visibility: 'public' },
 );
 
 // Get the download URL
@@ -65,10 +75,10 @@ const streamUrl = client.getStreamUrl(file.id);
 new MediaVaultClient(options: MediaVaultClientOptions)
 ```
 
-| Option     | Type     | Description                                          |
-| ---------- | -------- | ---------------------------------------------------- |
-| `baseUrl`  | `string` | Base URL of your MediaVault server (e.g. `http://localhost:3000`) |
-| `apiKey`   | `string` | API key for authentication (prefixed with `mv_`)     |
+| Option    | Type     | Description                                                       |
+| --------- | -------- | ----------------------------------------------------------------- |
+| `baseUrl` | `string` | Base URL of your MediaVault server (e.g. `http://localhost:3000`) |
+| `apiKey`  | `string` | API key for authentication (prefixed with `mv_`)                  |
 
 ### Projects
 
@@ -171,7 +181,7 @@ client.getStreamUrl(id: string): string
 ```typescript
 enum FileVisibility {
   Private = 'private',
-  Public  = 'public',
+  Public = 'public',
 }
 
 interface Project {
@@ -186,7 +196,7 @@ interface ApiKey {
   id: string;
   projectId: string;
   key: string;
-  rawKey?: string;      // Only returned on creation
+  rawKey?: string; // Only returned on creation
   label: string;
   createdAt: string;
   lastUsedAt: string | null;

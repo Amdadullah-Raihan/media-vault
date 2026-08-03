@@ -11,10 +11,16 @@
 export abstract class AppError extends Error {
   public abstract readonly statusCode: number;
   public abstract readonly errorCode: string;
+  public readonly details?: Array<{ path: string; message: string }>;
 
-  public constructor(message: string, options?: ErrorOptions) {
+  public constructor(
+    message: string,
+    options?: ErrorOptions,
+    details?: Array<{ path: string; message: string }>,
+  ) {
     super(message, options);
     this.name = this.constructor.name;
+    this.details = details;
   }
 }
 
@@ -63,8 +69,8 @@ export class ConflictError extends AppError {
   public readonly statusCode = 409;
   public readonly errorCode = 'CONFLICT';
 
-  public constructor(message: string) {
-    super(message);
+  public constructor(message: string, details?: Array<{ path: string; message: string }>) {
+    super(message, undefined, details);
   }
 }
 

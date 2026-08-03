@@ -5,10 +5,26 @@
 import { createApp } from './presentation';
 import { getConfig } from './config';
 import { getLogger } from './utils/logger';
+import { UserRepository, RoleRepository, AuditRepository } from './repositories';
+import { AuthService } from './services';
+import { SessionRepository } from './repositories';
 
 async function main(): Promise<void> {
   const config = getConfig();
   const logger = getLogger();
+
+  // Seed built-in roles on first ever startup
+  const roleRepo = new RoleRepository();
+  const auditRepo = new AuditRepository();
+  const authService = new AuthService(
+    new SessionRepository(),
+    new UserRepository(),
+    roleRepo,
+    auditRepo,
+    config.auth.adminUsername,
+    config.auth.adminPassword,
+  );
+  await authService.seedBuiltInRoles();
 
   const app = await createApp();
 

@@ -8,6 +8,8 @@ import {
   Upload,
   Settings,
   Activity,
+  Users,
+  Shield,
   ChevronLeft,
   type LucideIcon,
 } from 'lucide-react';
@@ -28,6 +30,8 @@ const navItems: NavItem[] = [
   { label: 'Upload', href: '/upload', icon: Upload },
   { label: 'API Keys', href: '/api-keys', icon: Key },
   { label: 'Settings', href: '/settings', icon: Settings },
+  { label: 'Users', href: '/users', icon: Users },
+  { label: 'Roles', href: '/roles', icon: Shield },
   { label: 'Logs', href: '/logs', icon: Activity },
 ];
 

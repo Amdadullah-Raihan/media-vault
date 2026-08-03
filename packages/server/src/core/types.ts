@@ -19,6 +19,144 @@ export enum MimeCategory {
 }
 
 // ---------------------------------------------------------------------------
+// User Status
+// ---------------------------------------------------------------------------
+
+export enum UserStatus {
+  Pending = 'pending',
+  Active = 'active',
+  Locked = 'locked',
+  Suspended = 'suspended',
+  Disabled = 'disabled',
+  Archived = 'archived',
+  Deleted = 'deleted',
+}
+
+// ---------------------------------------------------------------------------
+// User
+// ---------------------------------------------------------------------------
+
+export interface User {
+  id: string;
+  avatar: string | null;
+  firstName: string;
+  lastName: string;
+  displayName: string;
+  username: string;
+  email: string;
+  passwordHash: string;
+  passwordSalt: string;
+  status: UserStatus;
+  roleId: string;
+  assignedProjectIds: string[];
+  preferredLanguage: string;
+  timezone: string;
+  loginAttempts: number;
+  lockedUntil: Date | null;
+  lastLoginAt: Date | null;
+  lastActiveAt: Date | null;
+  createdBy: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface CreateUserInput {
+  username: string;
+  email: string;
+  password: string;
+  firstName: string;
+  lastName: string;
+  roleId: string;
+  assignedProjectIds?: string[];
+}
+
+export interface UpdateUserInput {
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+  roleId?: string;
+  assignedProjectIds?: string[];
+  status?: UserStatus;
+}
+
+/** Public user profile — never exposes passwordHash, passwordSalt, or loginAttempts. */
+export interface UserProfile {
+  id: string;
+  avatar: string | null;
+  firstName: string;
+  lastName: string;
+  displayName: string;
+  username: string;
+  email: string;
+  status: UserStatus;
+  roleId: string;
+  assignedProjectIds: string[];
+  preferredLanguage: string;
+  timezone: string;
+  lastLoginAt: Date | null;
+  lastActiveAt: Date | null;
+  createdBy: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// ---------------------------------------------------------------------------
+// Role
+// ---------------------------------------------------------------------------
+
+export interface Role {
+  id: string;
+  name: string;
+  description: string;
+  permissions: string[];
+  isBuiltIn: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface CreateRoleInput {
+  name: string;
+  description: string;
+  permissions: string[];
+}
+
+export interface UpdateRoleInput {
+  name?: string;
+  description?: string;
+  permissions?: string[];
+}
+
+// ---------------------------------------------------------------------------
+// Audit Log
+// ---------------------------------------------------------------------------
+
+export interface AuditEntry {
+  id: string;
+  userId: string;
+  action: string;
+  resourceType: string;
+  resourceId: string | null;
+  previousValue: unknown;
+  newValue: unknown;
+  ip: string;
+  userAgent: string;
+  success: boolean;
+  timestamp: Date;
+}
+
+export interface CreateAuditEntryInput {
+  userId: string;
+  action: string;
+  resourceType: string;
+  resourceId?: string | null;
+  previousValue?: unknown;
+  newValue?: unknown;
+  ip: string;
+  userAgent: string;
+  success?: boolean;
+}
+
+// ---------------------------------------------------------------------------
 // Project
 // ---------------------------------------------------------------------------
 

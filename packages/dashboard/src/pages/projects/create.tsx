@@ -4,7 +4,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useCreateProjectMutation } from '@/services/projects.service';
 import { PageHeader } from '@/components/shared';
-import { Button, Input, Textarea } from '@/components/ui';
+import { Button, Input, Textarea, ForbiddenState, PageSpinner } from '@/components/ui';
+import { usePermissions } from '@/hooks';
 import { ArrowLeft } from 'lucide-react';
 import toast from 'react-hot-toast';
 import type { ApiError } from '@/types';
@@ -22,7 +23,13 @@ type CreateFormData = z.infer<typeof createSchema>;
 
 export default function ProjectCreatePage() {
   const navigate = useNavigate();
+  const { hasPermission, isLoading: permissionsLoading } = usePermissions();
+  const canCreate = hasPermission('projects.create');
+
   const [createProject, { isLoading }] = useCreateProjectMutation();
+
+  if (permissionsLoading) return <PageSpinner />;
+  if (!canCreate) return <ForbiddenState />;
 
   const {
     register,
@@ -42,7 +49,7 @@ export default function ProjectCreatePage() {
       navigate(`/projects/${result.data.id}`);
     } catch (err: unknown) {
       const apiErr = err as { data?: ApiError };
-      toast.error(apiErr?.data?.message ?? 'Failed to create project');
+      toast.error(apiErr.data?.error?.message ?? 'Failed to create project');
     }
   };
 

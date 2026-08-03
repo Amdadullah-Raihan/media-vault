@@ -7,8 +7,15 @@ import {
 } from '@/services/files.service';
 import { PageHeader } from '@/components/shared';
 import { ConfirmDialog } from '@/components/shared';
-import { Button, Badge, PageSkeleton, ErrorState } from '@/components/ui';
-import { useConfirm } from '@/hooks';
+import {
+  Button,
+  Badge,
+  PageSkeleton,
+  ErrorState,
+  ForbiddenState,
+  PageSpinner,
+} from '@/components/ui';
+import { useConfirm, usePermissions } from '@/hooks';
 import { formatFileSize, formatDateTime, getMimeCategory, isPreviewable } from '@/utils';
 import { FileVisibility } from '@/types';
 import {
@@ -40,12 +47,19 @@ export default function FileDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { confirm, confirmState, handleConfirm, handleClose } = useConfirm();
+  const { hasPermission, isLoading: permissionsLoading } = usePermissions();
+  const canView = hasPermission('files.view');
+  const canDelete = hasPermission('files.delete');
+
   const [signedUrl, setSignedUrl] = useState<string | null>(null);
 
-  const { data, isLoading, isError, refetch } = useGetFileQuery(id!);
+  const { data, isLoading, isError, refetch } = useGetFileQuery(id!, { skip: !canView || !id });
   const [deleteFile, { isLoading: deleting }] = useDeleteFileMutation();
   const [updateFile, { isLoading: updatingVisibility }] = useUpdateFileMutation();
   const [getSignedUrl, { isLoading: generatingUrl }] = useGetSignedUrlMutation();
+
+  if (permissionsLoading) return <PageSpinner />;
+  if (!canView) return <ForbiddenState />;
 
   if (isLoading) return <PageSkeleton />;
   if (isError || !data?.data) return <ErrorState onRetry={refetch} />;
@@ -127,10 +141,12 @@ export default function FileDetailPage() {
               <Download className="h-4 w-4" />
               Download
             </Button>
-            <Button size="sm" variant="destructive" onClick={handleDelete} loading={deleting}>
-              <Trash2 className="h-4 w-4" />
-              Delete
-            </Button>
+            {canDelete && (
+              <Button size="sm" variant="destructive" onClick={handleDelete} loading={deleting}>
+                <Trash2 className="h-4 w-4" />
+                Delete
+              </Button>
+            )}
           </div>
         }
       />

@@ -12,5 +12,6 @@ export { Badge } from './badge';
 export { Skeleton, CardSkeleton, TableSkeleton, StatCardSkeleton, PageSkeleton } from './skeleton';
 export { Spinner, PageSpinner } from './spinner';
 export { EmptyState, ErrorState } from './empty-state';
+export { ForbiddenState } from './forbidden-state';
 export { Progress } from './progress';
 export { DropdownMenu, DropdownItem, DropdownSeparator } from './dropdown-menu';
