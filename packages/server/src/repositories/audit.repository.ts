@@ -31,13 +31,15 @@ export class AuditRepository {
   public async findAll(limit = 100, offset = 0): Promise<AuditEntry[]> {
     const all = this.store.all<AuditEntry>(COLLECTION);
     return all
-      .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
+      .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
       .slice(offset, offset + limit);
   }
 
   public async findByUser(userId: string, limit = 50): Promise<AuditEntry[]> {
     const entries = this.store.findMany<AuditEntry>(COLLECTION, (e) => e.userId === userId);
-    return entries.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime()).slice(0, limit);
+    return entries
+      .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+      .slice(0, limit);
   }
 
   public async count(): Promise<number> {

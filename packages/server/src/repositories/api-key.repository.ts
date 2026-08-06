@@ -34,13 +34,13 @@ export class ApiKeyRepository {
   public async findByProjectId(projectId: string): Promise<ApiKey[]> {
     return this.store
       .findMany<ApiKey>(COLLECTION, (k) => k.projectId === projectId)
-      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   }
 
   public async findAll(): Promise<ApiKey[]> {
     return this.store
       .all<ApiKey>(COLLECTION)
-      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   }
 
   public async delete(id: string): Promise<ApiKey | undefined> {
