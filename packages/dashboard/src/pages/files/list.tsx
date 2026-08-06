@@ -53,12 +53,12 @@ function FileThumbnail({ file, size }: { file: FileMetadata; size?: 'sm' | 'lg' 
   const streamUrl = `/api/v1/files/${file.id}/stream`;
 
   if (category === 'image') {
-    const dims = size === 'lg' ? 'h-32 w-full' : 'h-8 w-8';
+    const dims = size === 'lg' ? 'aspect-video w-full' : 'h-8 w-8';
     return (
       <img
         src={streamUrl}
         alt={file.originalFilename}
-        className={`${dims} rounded object-cover`}
+        className={`${dims} object-cover ${size === 'lg' ? 'rounded-t-lg' : 'rounded'}`}
         loading="lazy"
       />
     );
@@ -67,7 +67,9 @@ function FileThumbnail({ file, size }: { file: FileMetadata; size?: 'sm' | 'lg' 
   const IconComp = mimeIconMap[category] ?? File;
   const iconDims = size === 'lg' ? 'h-10 w-10' : 'h-4 w-4';
   const bg =
-    size === 'lg' ? 'flex h-32 w-full items-center justify-center rounded-lg bg-muted' : '';
+    size === 'lg'
+      ? 'flex aspect-video w-full items-center justify-center rounded-t-lg bg-muted'
+      : '';
 
   if (size === 'lg') {
     return (
@@ -134,13 +136,13 @@ export default function FilesPage() {
   if (isError) return <ErrorState onRetry={refetch} />;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 min-w-0">
       <PageHeader
         title="Files"
         description="Browse and manage your uploaded files."
         actions={
-          <>
-            <div className="flex rounded-md border">
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="flex rounded-md border shrink-0">
               <Button
                 variant={viewMode === 'grid' ? 'secondary' : 'ghost'}
                 size="icon-sm"
@@ -164,7 +166,7 @@ export default function FilesPage() {
                 Upload
               </Button>
             )}
-          </>
+          </div>
         }
       />
 
@@ -172,7 +174,7 @@ export default function FilesPage() {
         placeholder="Search files..."
         value={search}
         onChange={setSearch}
-        className="max-w-sm"
+        className="w-full max-w-sm"
       />
 
       {files.length === 0 ? (
@@ -241,12 +243,12 @@ function FileGrid({
   onView: (f: FileMetadata) => void;
 }) {
   return (
-    <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+    <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 min-w-0">
       {files.map((file) => {
         return (
           <div
             key={file.id}
-            className="group rounded-lg border bg-card transition-colors hover:border-primary/50"
+            className="group rounded-lg border bg-card transition-colors hover:border-primary/50 min-w-0"
           >
             <FileThumbnail file={file} size="lg" />
             <div className="p-4">
@@ -254,7 +256,7 @@ function FileGrid({
                 <DropdownMenu
                   trigger={
                     <button
-                      className="rounded p-1 opacity-0 transition-opacity hover:bg-accent group-hover:opacity-100"
+                      className="rounded p-1 opacity-0 transition-opacity hover:bg-accent group-hover:opacity-100 md:opacity-0"
                       aria-label="File actions"
                     >
                       <MoreVertical className="h-4 w-4" />
@@ -319,7 +321,7 @@ function FileTable({
   onView: (f: FileMetadata) => void;
 }) {
   return (
-    <div className="rounded-lg border">
+    <div className="rounded-lg border min-w-0 overflow-hidden">
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
@@ -411,23 +413,23 @@ function FilePreviewModal({ file, onClose }: { file: FileMetadata; onClose: () =
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="fixed inset-0 bg-black/60" onClick={onClose} />
-      <div className="relative z-50 max-h-[90vh] max-w-4xl rounded-lg bg-background shadow-xl">
-        <div className="flex items-center justify-between border-b px-6 py-4">
-          <h3 className="font-semibold truncate">{file.originalFilename}</h3>
-          <Button variant="ghost" size="icon-sm" onClick={onClose}>
+      <div className="relative z-50 max-h-[90vh] w-[calc(100vw-2rem)] max-w-4xl overflow-hidden rounded-lg bg-background shadow-xl">
+        <div className="flex items-center justify-between border-b px-4 py-3 sm:px-6 sm:py-4">
+          <h3 className="font-semibold truncate mr-2">{file.originalFilename}</h3>
+          <Button variant="ghost" size="icon-sm" onClick={onClose} className="shrink-0">
             <ExternalLink className="h-4 w-4" />
           </Button>
         </div>
-        <div className="p-6">
+        <div className="p-4 sm:p-6 overflow-auto max-h-[calc(90vh-3.5rem)]">
           {category === 'image' && (
             <img
               src={streamUrl}
               alt={file.originalFilename}
-              className="max-h-[70vh] rounded object-contain"
+              className="max-h-[70vh] w-full rounded object-contain"
             />
           )}
           {category === 'video' && (
-            <video controls className="max-h-[70vh] rounded" src={streamUrl}>
+            <video controls className="max-h-[70vh] w-full rounded" src={streamUrl}>
               Your browser does not support video playback.
             </video>
           )}

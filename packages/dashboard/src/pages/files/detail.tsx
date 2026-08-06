@@ -136,7 +136,7 @@ export default function FileDetailPage() {
         title={file.originalFilename}
         description={`${formatFileSize(file.size)} · ${file.mimeType}`}
         actions={
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <Button size="sm" onClick={handleDownload}>
               <Download className="h-4 w-4" />
               Download
@@ -177,27 +177,27 @@ export default function FileDetailPage() {
           <h3 className="font-semibold">File Information</h3>
         </div>
         <dl className="divide-y">
-          <div className="flex justify-between px-6 py-3 text-sm">
+          <div className="flex flex-col gap-1 px-4 py-3 text-sm sm:flex-row sm:justify-between sm:px-6">
             <dt className="text-muted-foreground">Filename</dt>
-            <dd className="font-medium">{file.filename}</dd>
+            <dd className="font-medium break-all">{file.filename}</dd>
           </div>
-          <div className="flex justify-between px-6 py-3 text-sm">
+          <div className="flex flex-col gap-1 px-4 py-3 text-sm sm:flex-row sm:justify-between sm:px-6">
             <dt className="text-muted-foreground">Original Name</dt>
-            <dd className="font-medium">{file.originalFilename}</dd>
+            <dd className="font-medium break-all">{file.originalFilename}</dd>
           </div>
-          <div className="flex justify-between px-6 py-3 text-sm">
+          <div className="flex flex-col gap-1 px-4 py-3 text-sm sm:flex-row sm:justify-between sm:px-6">
             <dt className="text-muted-foreground">MIME Type</dt>
-            <dd className="font-medium">{file.mimeType}</dd>
+            <dd className="font-medium break-all">{file.mimeType}</dd>
           </div>
-          <div className="flex justify-between px-6 py-3 text-sm">
+          <div className="flex flex-col gap-1 px-4 py-3 text-sm sm:flex-row sm:justify-between sm:px-6">
             <dt className="text-muted-foreground">Size</dt>
             <dd className="font-medium">{formatFileSize(file.size)}</dd>
           </div>
-          <div className="flex justify-between px-6 py-3 text-sm">
+          <div className="flex flex-col gap-1 px-4 py-3 text-sm sm:flex-row sm:justify-between sm:px-6">
             <dt className="text-muted-foreground">Extension</dt>
             <dd className="font-medium uppercase">{file.extension}</dd>
           </div>
-          <div className="flex justify-between px-6 py-3 text-sm">
+          <div className="flex flex-col gap-1 px-4 py-3 text-sm sm:flex-row sm:justify-between sm:px-6">
             <dt className="text-muted-foreground">Visibility</dt>
             <dd className="flex items-center gap-2">
               <Badge variant={file.visibility === 'public' ? 'success' : 'secondary'}>

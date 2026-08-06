@@ -84,7 +84,7 @@ export default function UsersListPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Users</h1>
           <p className="text-muted-foreground">Manage administrator accounts and permissions.</p>
@@ -128,106 +128,201 @@ export default function UsersListPage() {
       )}
 
       {users.length > 0 && (
-        <div className="rounded-lg border">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b bg-muted/50">
-                <th className="px-4 py-3 text-left text-sm font-medium">User</th>
-                <th className="px-4 py-3 text-left text-sm font-medium">Role</th>
-                <th className="px-4 py-3 text-left text-sm font-medium">Status</th>
-                <th className="px-4 py-3 text-left text-sm font-medium">Last Active</th>
-                <th className="px-4 py-3 text-right text-sm font-medium">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {users.map((user) => {
-                const badge = STATUS_BADGES[user.status];
-                return (
-                  <tr key={user.id} className="border-b last:border-0 hover:bg-muted/30">
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-3">
-                        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-sm font-medium">
-                          {user.firstName[0]}
-                          {user.lastName[0]}
+        <>
+          {/* Desktop table — hidden on mobile */}
+          <div className="hidden md:block rounded-lg border">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b bg-muted/50">
+                  <th className="px-4 py-3 text-left text-sm font-medium">User</th>
+                  <th className="px-4 py-3 text-left text-sm font-medium">Role</th>
+                  <th className="px-4 py-3 text-left text-sm font-medium">Status</th>
+                  <th className="px-4 py-3 text-left text-sm font-medium">Last Active</th>
+                  <th className="px-4 py-3 text-right text-sm font-medium">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {users.map((user) => {
+                  const badge = STATUS_BADGES[user.status];
+                  return (
+                    <tr key={user.id} className="border-b last:border-0 hover:bg-muted/30">
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-3">
+                          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-sm font-medium">
+                            {user.firstName[0]}
+                            {user.lastName[0]}
+                          </div>
+                          <div>
+                            <Link to={`/users/${user.id}`} className="font-medium hover:underline">
+                              {user.displayName}
+                            </Link>
+                            <p className="text-xs text-muted-foreground">{user.email}</p>
+                          </div>
                         </div>
-                        <div>
-                          <Link to={`/users/${user.id}`} className="font-medium hover:underline">
-                            {user.displayName}
-                          </Link>
-                          <p className="text-xs text-muted-foreground">{user.email}</p>
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-2">
+                          <Shield className="h-4 w-4 text-muted-foreground" />
+                          <span className="text-sm capitalize">{user.roleId}</span>
                         </div>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-2">
-                        <Shield className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-sm capitalize">{user.roleId}</span>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3">
-                      <Badge variant={badge.variant}>{badge.label}</Badge>
-                    </td>
-                    <td className="px-4 py-3 text-sm text-muted-foreground">
-                      {user.lastActiveAt
-                        ? new Date(user.lastActiveAt).toLocaleDateString()
-                        : 'Never'}
-                    </td>
-                    <td className="px-4 py-3 text-right">
-                      <div className="flex items-center justify-end gap-1">
-                        {canEdit && user.status === UserStatus.Active && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => {
-                              void handleSuspend(user);
-                            }}
-                          >
-                            <Ban className="h-4 w-4" />
-                          </Button>
-                        )}
-                        {canEdit && user.status === UserStatus.Suspended && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => {
-                              void handleRestore(user);
-                            }}
-                          >
-                            <Shield className="h-4 w-4" />
-                          </Button>
-                        )}
-                        {canEdit && user.status === UserStatus.Locked && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => {
-                              void handleUnlock(user);
-                            }}
-                          >
-                            <Lock className="h-4 w-4" />
-                          </Button>
-                        )}
-                        {canDelete &&
-                          (user.status === UserStatus.Disabled ||
-                            user.status === UserStatus.Suspended) && (
+                      </td>
+                      <td className="px-4 py-3">
+                        <Badge variant={badge.variant}>{badge.label}</Badge>
+                      </td>
+                      <td className="px-4 py-3 text-sm text-muted-foreground">
+                        {user.lastActiveAt
+                          ? new Date(user.lastActiveAt).toLocaleDateString()
+                          : 'Never'}
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        <div className="flex items-center justify-end gap-1">
+                          {canEdit && user.status === UserStatus.Active && (
                             <Button
                               variant="ghost"
                               size="sm"
                               onClick={() => {
-                                void handleDelete(user);
+                                void handleSuspend(user);
                               }}
                             >
-                              <Trash2 className="h-4 w-4 text-destructive" />
+                              <Ban className="h-4 w-4" />
                             </Button>
                           )}
+                          {canEdit && user.status === UserStatus.Suspended && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => {
+                                void handleRestore(user);
+                              }}
+                            >
+                              <Shield className="h-4 w-4" />
+                            </Button>
+                          )}
+                          {canEdit && user.status === UserStatus.Locked && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => {
+                                void handleUnlock(user);
+                              }}
+                            >
+                              <Lock className="h-4 w-4" />
+                            </Button>
+                          )}
+                          {canDelete &&
+                            (user.status === UserStatus.Disabled ||
+                              user.status === UserStatus.Suspended) && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => {
+                                  void handleDelete(user);
+                                }}
+                              >
+                                <Trash2 className="h-4 w-4 text-destructive" />
+                              </Button>
+                            )}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Mobile cards — visible only on mobile */}
+          <div className="space-y-3 md:hidden">
+            {users.map((user) => {
+              const badge = STATUS_BADGES[user.status];
+              return (
+                <div key={user.id} className="rounded-lg border p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-medium">
+                        {user.firstName[0]}
+                        {user.lastName[0]}
                       </div>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+                      <div className="min-w-0">
+                        <Link
+                          to={`/users/${user.id}`}
+                          className="font-medium hover:underline text-sm"
+                        >
+                          {user.displayName}
+                        </Link>
+                        <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                      </div>
+                    </div>
+                    <Badge variant={badge.variant}>{badge.label}</Badge>
+                  </div>
+                  <div className="mt-3 flex items-center justify-between text-xs text-muted-foreground">
+                    <div className="flex items-center gap-1.5">
+                      <Shield className="h-3.5 w-3.5" />
+                      <span className="capitalize">{user.roleId}</span>
+                    </div>
+                    <span>
+                      {user.lastActiveAt
+                        ? new Date(user.lastActiveAt).toLocaleDateString()
+                        : 'Never'}
+                    </span>
+                  </div>
+                  <div className="mt-3 flex flex-wrap items-center gap-1 border-t pt-3">
+                    {canEdit && user.status === UserStatus.Active && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          void handleSuspend(user);
+                        }}
+                      >
+                        <Ban className="mr-1.5 h-3.5 w-3.5" />
+                        Suspend
+                      </Button>
+                    )}
+                    {canEdit && user.status === UserStatus.Suspended && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          void handleRestore(user);
+                        }}
+                      >
+                        <Shield className="mr-1.5 h-3.5 w-3.5" />
+                        Restore
+                      </Button>
+                    )}
+                    {canEdit && user.status === UserStatus.Locked && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          void handleUnlock(user);
+                        }}
+                      >
+                        <Lock className="mr-1.5 h-3.5 w-3.5" />
+                        Unlock
+                      </Button>
+                    )}
+                    {canDelete &&
+                      (user.status === UserStatus.Disabled ||
+                        user.status === UserStatus.Suspended) && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            void handleDelete(user);
+                          }}
+                        >
+                          <Trash2 className="mr-1.5 h-3.5 w-3.5 text-destructive" />
+                          Delete
+                        </Button>
+                      )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </>
       )}
     </div>
   );

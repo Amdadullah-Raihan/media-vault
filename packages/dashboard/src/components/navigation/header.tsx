@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppSelector, useAppDispatch } from '@/redux/store';
-import { setTheme } from '@/redux/slices/ui.slice';
+import { setTheme, toggleMobileMenu } from '@/redux/slices/ui.slice';
 import { useLogoutMutation } from '@/services/auth.service';
 import { Button } from '@/components/ui';
 import { DropdownMenu, DropdownItem, DropdownSeparator } from '@/components/ui';
-import { Sun, Moon, Monitor, LogOut, User, Settings } from 'lucide-react';
+import { Sun, Moon, Monitor, LogOut, User, Settings, Menu } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export function Header() {
@@ -37,12 +37,21 @@ export function Header() {
     );
 
   return (
-    <header className="flex h-14 items-center justify-between border-b bg-card px-6">
-      <div className="flex items-center gap-4">
-        {/* Mobile menu trigger - shown by sidebar toggle in responsive mode */}
+    <header className="flex h-14 items-center justify-between border-b bg-card px-4 sm:px-6">
+      <div className="flex items-center gap-2">
+        {/* Mobile menu trigger */}
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => dispatch(toggleMobileMenu())}
+          className="md:hidden"
+          aria-label="Open menu"
+        >
+          <Menu className="h-5 w-5" />
+        </Button>
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1 sm:gap-2">
         {/* Theme toggle */}
         <DropdownMenu
           trigger={

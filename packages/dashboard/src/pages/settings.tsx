@@ -114,13 +114,13 @@ export default function SettingsPage() {
 
       {/* General */}
       <div className="rounded-lg border">
-        <div className="border-b px-6 py-4">
+        <div className="border-b px-4 py-4 sm:px-6">
           <div className="flex items-center gap-2">
             <Settings className="h-5 w-5 text-muted-foreground" />
             <h3 className="font-semibold">General</h3>
           </div>
         </div>
-        <div className="p-6 space-y-4">
+        <div className="p-4 sm:p-6 space-y-4">
           <div>
             <label className="text-sm font-medium">Admin Username</label>
             <p className="mt-1 text-sm text-muted-foreground">
@@ -142,7 +142,7 @@ export default function SettingsPage() {
             <h3 className="font-semibold">Appearance</h3>
           </div>
         </div>
-        <div className="p-6">
+        <div className="p-4 sm:p-6">
           <Select
             id="theme"
             label="Theme"
@@ -165,7 +165,7 @@ export default function SettingsPage() {
             <h3 className="font-semibold">Change Password</h3>
           </div>
         </div>
-        <div className="p-6">
+        <div className="p-4 sm:p-6">
           <p className="mb-4 text-sm text-muted-foreground">
             Initial credentials come from{' '}
             <code className="rounded bg-muted px-1 py-0.5 text-xs">.env</code>. Changes made here

@@ -352,10 +352,10 @@ export default function UserCreatePage() {
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
         {/* ── User Details ─────────────────────────────── */}
 
-        <div className="rounded-lg border p-6 space-y-4">
+        <div className="rounded-lg border p-4 sm:p-6 space-y-4">
           <h2 className="text-lg font-semibold">User Details</h2>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid gap-4 sm:grid-cols-2">
             <Input
               id="firstName"
               label="First Name"
@@ -401,8 +401,8 @@ export default function UserCreatePage() {
 
         {/* ── Role & Permissions ────────────────────────── */}
 
-        <div className="rounded-lg border p-6 space-y-6">
-          <div className="flex items-center justify-between gap-3">
+        <div className="rounded-lg border p-4 sm:p-6 space-y-6">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h2 className="text-lg font-semibold">Role & Permissions</h2>
               <p className="text-sm text-muted-foreground">
@@ -424,15 +424,13 @@ export default function UserCreatePage() {
             options={PRESET_OPTIONS}
           />
 
-          <div className="grid gap-4 md:grid-cols-2">
-            <Input
-              id="roleName"
-              label="Role Name"
-              placeholder="e.g. media-manager"
-              error={errors.roleName?.message}
-              {...register('roleName', { onChange: handleRoleNameChange })}
-            />
-          </div>
+          <Input
+            id="roleName"
+            label="Role Name"
+            placeholder="e.g. media-manager"
+            error={errors.roleName?.message}
+            {...register('roleName', { onChange: handleRoleNameChange })}
+          />
 
           <Textarea
             id="roleDescription"
