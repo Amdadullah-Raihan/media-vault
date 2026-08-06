@@ -22,9 +22,6 @@ export const ROUTES = {
   USERS: '/users',
   USER_DETAIL: '/users/:id',
   USER_CREATE: '/users/new',
-  ROLES: '/roles',
-  ROLE_DETAIL: '/roles/:id',
-  ROLE_CREATE: '/roles/new',
 } as const;
 
 export const FILE_SIZE_UNITS = ['B', 'KB', 'MB', 'GB', 'TB'] as const;
