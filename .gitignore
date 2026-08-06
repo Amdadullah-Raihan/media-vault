@@ -61,3 +61,4 @@ coverage/
 *.tgz
 *.rar
 *.7z
+packages/dashboard/tsconfig.tsbuildinfo
